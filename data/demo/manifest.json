@@ -1,0 +1,92 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1265,
+      "path": "map/README.md",
+      "sha256": "197e31a043b41df9308a5a26e0c6cdf2c64b58e3ba861d4608f4243d6a84cd69"
+    },
+    {
+      "bytes": 795,
+      "path": "map/metadata.json",
+      "sha256": "42dd6516135d0a5fe6658f08638c71f7ef5415adc7fe6c294539add1b16a9469"
+    },
+    {
+      "bytes": 19083609,
+      "path": "map/sao-paulo.pmtiles",
+      "sha256": "03f9f3a67899b1d3c3d814d11351fd2aac8b8c7e71724f091f729c6b86db12cd"
+    },
+    {
+      "bytes": 1252,
+      "path": "map/style.json",
+      "sha256": "fd5eec6cd5b40e3945b061d44707f3365cf10d9ff4994f5c2288df0c63ccbde3"
+    },
+    {
+      "bytes": 1869,
+      "path": "mobility/README.md",
+      "sha256": "d90c4e4d575d3153fda5960890e7a65e85900c6d7403f5b439c4ee5578c77d8b"
+    },
+    {
+      "bytes": 2501,
+      "path": "mobility/artesp_sp280_km14_2025-01-01_07.csv",
+      "sha256": "680bbe0e0979ff3a7c7a6c9a9aa8e4259d339c2739a689bcd00143d7885b1eed"
+    },
+    {
+      "bytes": 1497,
+      "path": "mobility/provenance.json",
+      "sha256": "e9279678ca90ab7c347e6df08a37aa79e5fafcf4ede3af84596c2ab396f57d36"
+    },
+    {
+      "bytes": 1385,
+      "path": "spatial/README.md",
+      "sha256": "33d4a55ca5321f09c19d5d04148ad84eb99a68fd51754909132ce799a3c00308"
+    },
+    {
+      "bytes": 64848,
+      "path": "spatial/artifacts/edge_h3_weights.parquet",
+      "sha256": "8659d4ab1e4e658c3f3464e2d70a4da22fcef4e359006b47bcee7a141b215d56"
+    },
+    {
+      "bytes": 990803,
+      "path": "spatial/artifacts/edges.parquet",
+      "sha256": "537e3eccc331952897f251fc265f9634fdffff75843d94bcf461df526650d3d4"
+    },
+    {
+      "bytes": 30417,
+      "path": "spatial/artifacts/h3_cells.geojson",
+      "sha256": "a15a5ebbbfbe0425d93083f59e934f6e7fb8e4e089ee85973a9e2329eba0ecf6"
+    },
+    {
+      "bytes": 1140,
+      "path": "spatial/artifacts/manifest.json",
+      "sha256": "5870f094fc657f6adc39cf63a068f71bf12d6fe2e0886f57f27b1b37701f7781"
+    },
+    {
+      "bytes": 136228,
+      "path": "spatial/artifacts/nodes.parquet",
+      "sha256": "8b5eb43a5aa2f8f6f2a2a0536bc7df89f57ac2fb43835dc2406ceb01a3ab7d65"
+    },
+    {
+      "bytes": 1670,
+      "path": "spatial/source/provenance.json",
+      "sha256": "5ddf42656eda1c7ff0727c68dcab14a6fb45d9c5310a3bbd7f2c4eae9420c0dd"
+    },
+    {
+      "bytes": 6850523,
+      "path": "spatial/source/sao_paulo_central_drive.graphml",
+      "sha256": "f292f8b6d2772f254fc08bb1f5a9ee69a46182bb0eed573f39b19be26f6984f1"
+    },
+    {
+      "bytes": 413,
+      "path": "spatial/source/sao_paulo_central_subset.geojson",
+      "sha256": "ac58b49849fedfe0f1102b62445002b392710368553b1b559ea19043d6b8e1a5"
+    },
+    {
+      "bytes": 1283,
+      "path": "spatial/source/sao_paulo_ibge_boundary.geojson",
+      "sha256": "79e70e9800f8dda8b4ad9868487725fc2d4a9c8b643a591427ebaccee5a52f3a"
+    }
+  ],
+  "bundle": "city-os-sao-paulo-demo",
+  "offline_runtime": true,
+  "schema_version": "1.0"
+}

@@ -1,0 +1,18 @@
+{
+  "artifact": "sao-paulo.pmtiles",
+  "format": "PMTiles v3 / gzip-compressed MVT",
+  "source_url": "https://build.protomaps.com/20231023.pmtiles",
+  "source_snapshot": "2023-10-23T05:00:00Z",
+  "source_replication_sequence": 97390,
+  "source_build_commit": "10fede8634553b09258f9280831db8c8bb1e6425",
+  "clip_region": "../spatial/source/sao_paulo_ibge_boundary.geojson",
+  "clip_region_sha256": "79e70e9800f8dda8b4ad9868487725fc2d4a9c8b643a591427ebaccee5a52f3a",
+  "bounds": [-46.8233, -24.0016, -46.3664, -23.3633],
+  "center": [-46.59485, -23.68245],
+  "minzoom": 0,
+  "maxzoom": 14,
+  "addressed_tiles": 563,
+  "sha256": "03f9f3a67899b1d3c3d814d11351fd2aac8b8c7e71724f091f729c6b86db12cd",
+  "builder": "pmtiles CLI v1.31.2",
+  "build_command": "scripts/assets/build_sao_paulo_pmtiles.sh"
+}

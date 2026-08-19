@@ -1,0 +1,26 @@
+{
+  "boundary": {
+    "attribution": "Instituto Brasileiro de Geografia e Estatistica (IBGE)",
+    "municipality_code": "3550308",
+    "license": "IBGE open data; attribution required",
+    "retrieval_command": "curl -L --fail --retry 3 -A 'City-OS-artifact-builder/1.0' 'https://servicodados.ibge.gov.br/api/v3/malhas/municipios/3550308?formato=application/vnd.geo%2Bjson&qualidade=minima' -o data/demo/spatial/source/sao_paulo_ibge_boundary.geojson",
+    "retrieved_at": "2026-08-19T15:38:27-03:00",
+    "sha256": "79e70e9800f8dda8b4ad9868487725fc2d4a9c8b643a591427ebaccee5a52f3a",
+    "source_url": "https://servicodados.ibge.gov.br/api/v3/malhas/municipios/3550308?formato=application/vnd.geo%2Bjson&qualidade=minima"
+  },
+  "road_graph": {
+    "attribution": "OpenStreetMap contributors",
+    "bbox_west_south_east_north": [-46.67, -23.585, -46.6, -23.515],
+    "license": "Open Database License (ODbL) 1.0",
+    "network_type": "drive",
+    "retrieval_command": "cd backend && uv run python -c \"import osmnx as ox; g=ox.graph_from_bbox((-46.67,-23.585,-46.60,-23.515),network_type='drive',simplify=True,retain_all=False,truncate_by_edge=True); ox.io.save_graphml(g,'../data/demo/spatial/source/sao_paulo_central_drive.graphml')\"",
+    "retrieved_at": "2026-08-19T15:38:54-03:00",
+    "sha256": "f292f8b6d2772f254fc08bb1f5a9ee69a46182bb0eed573f39b19be26f6984f1",
+    "source_url": "https://overpass-api.de/api/interpreter",
+    "tool": "OSMnx 2.1.1"
+  },
+  "subset_boundary": {
+    "derived_from": "sao_paulo_ibge_boundary.geojson intersected with the fixed road_graph bbox",
+    "sha256": "ac58b49849fedfe0f1102b62445002b392710368553b1b559ea19043d6b8e1a5"
+  }
+}

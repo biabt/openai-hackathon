@@ -1,0 +1,39 @@
+{
+  "artifacts": [
+    {
+      "media_type": "application/vnd.apache.parquet",
+      "path": "edge_h3_weights.parquet",
+      "rows": 13258,
+      "sha256": "8659d4ab1e4e658c3f3464e2d70a4da22fcef4e359006b47bcee7a141b215d56"
+    },
+    {
+      "media_type": "application/vnd.apache.parquet",
+      "path": "edges.parquet",
+      "rows": 11895,
+      "sha256": "537e3eccc331952897f251fc265f9634fdffff75843d94bcf461df526650d3d4"
+    },
+    {
+      "media_type": "application/geo+json",
+      "path": "h3_cells.geojson",
+      "rows": 74,
+      "sha256": "a15a5ebbbfbe0425d93083f59e934f6e7fb8e4e089ee85973a9e2329eba0ecf6"
+    },
+    {
+      "media_type": "application/vnd.apache.parquet",
+      "path": "nodes.parquet",
+      "rows": 6075,
+      "sha256": "8b5eb43a5aa2f8f6f2a2a0536bc7df89f57ac2fb43835dc2406ceb01a3ab7d65"
+    }
+  ],
+  "bounds": [
+    -46.67,
+    -23.585,
+    -46.6,
+    -23.515
+  ],
+  "crs": "EPSG:4326",
+  "license": "OpenStreetMap contributors, Open Database License (ODbL) 1.0",
+  "schema_version": "1.0.0",
+  "source": "OpenStreetMap live Overpass extract, fixed central Sao Paulo extent",
+  "source_date": "2026-08-19"
+}
