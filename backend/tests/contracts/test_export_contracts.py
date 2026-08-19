@@ -136,8 +136,8 @@ def test_schema_reaches_every_frozen_model_and_is_canonical(tmp_path: Path) -> N
     assert "type" not in schema
     assert "additionalProperties" not in schema
     assert schema["oneOf"] == [
-        {"$ref": f"#/$defs/{model_name}"}
-        for model_name in sorted(EXPECTED_MODEL_DEFINITIONS)
+        {"$ref": "#/$defs/BootstrapResponse"},
+        {"$ref": "#/$defs/SimulationFrame"},
     ]
     assert EXPECTED_MODEL_DEFINITIONS <= schema["$defs"].keys()
     _assert_recursively_sorted_keys(schema)
@@ -263,6 +263,21 @@ def test_full_root_schema_rejects_an_object_matching_no_frozen_model() -> None:
     """Removing incompatible root strictness must not make the contract root permissive."""
     with pytest.raises(JsonSchemaValidationError):
         Draft202012Validator(_committed_schema()).validate({"unknown_contract": True})
+
+
+@pytest.mark.parametrize(
+    "internal_payload",
+    [
+        {"h3_cell": "88a8100c05fffff", "node_id": 1, "x": -46.63, "y": -23.55},
+        {"fleet_size": 3, "scenario_id": "scenario-1", "seed": 42},
+    ],
+)
+def test_full_root_schema_rejects_valid_internal_models(
+    internal_payload: dict[str, object],
+) -> None:
+    """Internal definitions remain addressable without becoming root documents."""
+    with pytest.raises(JsonSchemaValidationError):
+        Draft202012Validator(_committed_schema()).validate(internal_payload)
 
 
 @pytest.mark.parametrize(

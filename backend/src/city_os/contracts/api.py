@@ -29,6 +29,7 @@ NonEmptyString = Annotated[str, StringConstraints(strip_whitespace=True, min_len
 NodeId = Annotated[int, Field(strict=True, ge=0)]
 NonNegativeInt = Annotated[int, Field(strict=True, ge=0)]
 PositiveInt = Annotated[int, Field(strict=True, ge=1)]
+PortableSeed = Annotated[int, Field(strict=True, ge=0, le=2_147_483_647)]
 FiniteNumber = Annotated[float, Field(strict=True, allow_inf_nan=False)]
 NonNegativeFinite = Annotated[float, Field(strict=True, ge=0, allow_inf_nan=False)]
 Percentage = Annotated[float, Field(strict=True, ge=0, le=100, allow_inf_nan=False)]
@@ -175,7 +176,7 @@ class ScenarioObservation(StrictModel):
 class SimulationRequest(StrictModel):
     scenario_id: NonEmptyString
     fleet_size: PositiveInt
-    seed: NonNegativeInt
+    seed: PortableSeed
 
 
 class AmbulanceSnapshot(StrictModel):

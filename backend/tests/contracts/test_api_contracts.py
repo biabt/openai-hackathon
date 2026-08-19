@@ -166,8 +166,6 @@ def test_frozen_enums_serialize_to_their_wire_values(type_: type[object], value:
         ("fleet_size", 0),
         ("fleet_size", True),
         ("fleet_size", 1.0),
-        ("seed", -1),
-        ("seed", "1"),
     ],
 )
 def test_simulation_request_rejects_non_strict_or_out_of_range_numbers(
@@ -181,13 +179,37 @@ def test_simulation_request_rejects_non_strict_or_out_of_range_numbers(
         SimulationRequest.model_validate(request)
 
 
-def test_simulation_request_accepts_unbounded_positive_fleet_and_seed() -> None:
-    """The C0 controller deliberately has no arbitrary fleet or seed ceiling."""
-    request = SimulationRequest(scenario_id=" scenario-1 ", fleet_size=101, seed=2**63)
+@pytest.mark.parametrize("seed", [0, 2_147_483_647])
+def test_simulation_request_accepts_portable_seed_boundaries(seed: int) -> None:
+    """Signed-32-bit seed endpoints must survive browser JSON round-trips."""
+    request = SimulationRequest(scenario_id="scenario-1", fleet_size=1, seed=seed)
+
+    assert request.seed == seed
+
+
+@pytest.mark.parametrize("seed", [-1, 2_147_483_648, True, "1", 1.0])
+def test_simulation_request_rejects_nonportable_or_nonstrict_seeds(seed: object) -> None:
+    """Out-of-range or coerced seeds can alter deterministic call-tape replay."""
+    with pytest.raises(ValidationError):
+        SimulationRequest(scenario_id="scenario-1", fleet_size=1, seed=seed)  # type: ignore[arg-type]
+
+
+def test_simulation_request_seed_schema_publishes_signed_32_bit_bounds() -> None:
+    """Schema-driven browser clients must receive the same portable seed range."""
+    seed_schema = SimulationRequest.model_json_schema()["properties"]["seed"]
+
+    assert seed_schema["minimum"] == 0
+    assert seed_schema["maximum"] == 2_147_483_647
+
+
+def test_simulation_request_accepts_unbounded_positive_fleet() -> None:
+    """The C0 controller deliberately has no arbitrary fleet ceiling."""
+    request = SimulationRequest(
+        scenario_id=" scenario-1 ", fleet_size=101, seed=2_147_483_647
+    )
 
     assert request.scenario_id == "scenario-1"
     assert request.fleet_size == 101
-    assert request.seed == 2**63
 
 
 @pytest.mark.parametrize("cell", ["8828308281ffffF", "8828308281ffffe", "not-a-cell"])

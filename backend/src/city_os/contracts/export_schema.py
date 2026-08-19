@@ -86,8 +86,8 @@ def _schema_document() -> dict[str, Any]:
         "title": "City OS C0 API Contract",
         "$defs": shared_schema["$defs"],
         "oneOf": [
-            {"$ref": f"#/$defs/{model_name}"}
-            for model_name in sorted(model.__name__ for model in FROZEN_MODELS)
+            {"$ref": "#/$defs/BootstrapResponse"},
+            {"$ref": "#/$defs/SimulationFrame"},
         ],
     }
 

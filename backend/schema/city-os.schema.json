@@ -1167,6 +1167,7 @@
           "type": "string"
         },
         "seed": {
+          "maximum": 2147483647,
           "minimum": 0,
           "title": "Seed",
           "type": "integer"
@@ -1185,73 +1186,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "oneOf": [
     {
-      "$ref": "#/$defs/AmbulanceSnapshot"
-    },
-    {
-      "$ref": "#/$defs/ApiError"
-    },
-    {
-      "$ref": "#/$defs/ArtifactChecksum"
-    },
-    {
-      "$ref": "#/$defs/ArtifactEntry"
-    },
-    {
-      "$ref": "#/$defs/ArtifactManifest"
-    },
-    {
       "$ref": "#/$defs/BootstrapResponse"
     },
     {
-      "$ref": "#/$defs/CallSnapshot"
-    },
-    {
-      "$ref": "#/$defs/CameraObservation"
-    },
-    {
-      "$ref": "#/$defs/EdgeState"
-    },
-    {
-      "$ref": "#/$defs/FleetSizeBounds"
-    },
-    {
-      "$ref": "#/$defs/H3Density"
-    },
-    {
-      "$ref": "#/$defs/MethodologyMetadata"
-    },
-    {
-      "$ref": "#/$defs/PairedMetrics"
-    },
-    {
-      "$ref": "#/$defs/RoadEdge"
-    },
-    {
-      "$ref": "#/$defs/RoadNode"
-    },
-    {
-      "$ref": "#/$defs/ScenarioObservation"
-    },
-    {
-      "$ref": "#/$defs/ScenarioParseRequest"
-    },
-    {
-      "$ref": "#/$defs/ScenarioParseResponse"
-    },
-    {
-      "$ref": "#/$defs/SimulationCreatedResponse"
-    },
-    {
       "$ref": "#/$defs/SimulationFrame"
-    },
-    {
-      "$ref": "#/$defs/SimulationJobResponse"
-    },
-    {
-      "$ref": "#/$defs/SimulationMetrics"
-    },
-    {
-      "$ref": "#/$defs/SimulationRequest"
     }
   ],
   "title": "City OS C0 API Contract"
