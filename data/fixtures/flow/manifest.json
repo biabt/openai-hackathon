@@ -3,47 +3,47 @@
     {
       "path": "camera_observations.parquet",
       "rows": 3,
-      "sha256": "9a01fa3331be7518fe87110754cfb95ebca73e955b8603f9c6f3fafd46fd06c0"
+      "sha256": "b3b97da96de36586c3612089183d3e6f3e33e2e722408d90cb5b16b09f3cf46f"
     },
     {
       "path": "derived/edge_state.parquet",
       "rows": 12,
-      "sha256": "006a556333645da380ac93950bf2a6dbd8e87ea6d446f1bdcfdf62060f0a6845"
+      "sha256": "896d0b189662e69f6f94fa9cc19a5f84f4ccc484f88a81b8fec24381ff8eb76f"
     },
     {
       "path": "derived/h3_density.parquet",
       "rows": 4,
-      "sha256": "84e3a793990dbe27932649d060836d0c2f8c8075217de78e3fc79c016354b292"
+      "sha256": "adcf9bf5500e893e3080a57b06ab1177ad261d01d0fc5456270640954f7c178f"
     },
     {
       "path": "derived/manifest.json",
       "rows": 0,
-      "sha256": "b64632a7ba5b4403279dc4ebdd7d3b7afaff52460230521172cd96d9953603ab"
+      "sha256": "5c6a39f286385ba4ee14e818ef0c09829440fcf499839589750419be46a176a8"
     },
     {
       "path": "spatial/edge_h3_weights.parquet",
       "rows": 8,
-      "sha256": "c35fb1bba6573aa203cb2c2063da04c73696da5046d0e5f53d51914fd83dacde"
+      "sha256": "98ae4bce3d2397f54eb64efa8812b0972d1ed658135f6bf590d0362a064eea2f"
     },
     {
       "path": "spatial/edges.parquet",
       "rows": 6,
-      "sha256": "d57dcd667de7a91c864fb271b16804262b2802b7c3b59758df673a8f8bb58b72"
+      "sha256": "b2a653997afdda990f378daa77bc4b81eb5062e905d7ee703742e02e7bd27179"
     },
     {
       "path": "spatial/h3_cells.geojson",
       "rows": 2,
-      "sha256": "3105e5ab5db78ad700473fa8842835523c9cf9e0e77101f2e4f90d53885f72b3"
+      "sha256": "5f4cf477c2436d495686ab2c5423896612c34556f955427f931991aa74ad5299"
     },
     {
       "path": "spatial/manifest.json",
       "rows": 0,
-      "sha256": "91c32bfc6791eda38c60fdcbe7a2d71f092e974f45ef43b733f2f2d29bbeac7d"
+      "sha256": "679868e168e6887cbbc0f00b47542fa32787f69fbaf2b8d07a2e1dddaae471a3"
     },
     {
       "path": "spatial/nodes.parquet",
       "rows": 4,
-      "sha256": "f549db26f21959b58788ed9ee0941fb5c5fffb0c2a0685b9ea4fb3fa737f0c36"
+      "sha256": "53bff7d071e8c39bed87185d7e5da663fb071d921e6b94336e1ed00c3c7cf476"
     }
   ],
   "build_command": "python3 scripts/build_flow_fixture.py --output data/fixtures/flow",
@@ -53,8 +53,8 @@
   },
   "directed_observation": {
     "direction": "a_to_b",
-    "observed_edge_id": "edge-8f97df05846694ae1c37",
-    "reverse_edge_id": "edge-70bc13c13d11b00b3f9b"
+    "observed_edge_id": 1148647642306220048,
+    "reverse_edge_id": 295705803453539782
   },
   "district_cells": {
     "east": "88a8100c03fffff",

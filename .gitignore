@@ -3,3 +3,4 @@ backend/.pytest_tmp/
 scripts/__pycache__/
 .codex-local-overlap-backup/
 .codex-parquet-permission-fix/
+.codex-stage-all/
