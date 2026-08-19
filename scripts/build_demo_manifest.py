@@ -9,6 +9,19 @@ import json
 from pathlib import Path
 
 
+TEXT_SUFFIXES = {".csv", ".geojson", ".graphml", ".json", ".md", ".txt"}
+
+
+def normalize_text_bytes(path: Path) -> None:
+    """Keep checksummed text assets byte-stable across Windows and Unix checkouts."""
+    if path.suffix.casefold() not in TEXT_SUFFIXES:
+        return
+    payload = path.read_bytes()
+    normalized = payload.replace(b"\r\n", b"\n")
+    if normalized != payload:
+        path.write_bytes(normalized)
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -23,6 +36,7 @@ def build_manifest(root: Path) -> dict[str, object]:
     for path in sorted(root.rglob("*")):
         if not path.is_file() or path == root / "manifest.json":
             continue
+        normalize_text_bytes(path)
         entries.append(
             {
                 "path": path.relative_to(root).as_posix(),

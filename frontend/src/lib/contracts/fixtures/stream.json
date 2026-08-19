@@ -1,0 +1,300 @@
+[
+  {
+    "active_scenario_ids": [],
+    "ambulances": [
+      {
+        "call_id": null,
+        "id": "amb-001",
+        "node_id": 1,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-002",
+        "node_id": 2,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-003",
+        "node_id": 3,
+        "status": "available",
+        "target_node_id": null
+      }
+    ],
+    "calls": [],
+    "metrics": {
+      "mean_seconds": 0,
+      "p50_seconds": 0,
+      "p90_seconds": 0,
+      "p95_seconds": 0,
+      "policy": "baseline",
+      "queued_calls": 0,
+      "reposition_km": 0,
+      "unserved_calls": 0,
+      "within_12m_pct": 0,
+      "within_20m_pct": 0,
+      "within_8m_pct": 0,
+      "worst_district_p90_seconds": 0
+    },
+    "minute": 0,
+    "policy": "baseline"
+  },
+  {
+    "active_scenario_ids": [],
+    "ambulances": [
+      {
+        "call_id": null,
+        "id": "amb-001",
+        "node_id": 1,
+        "status": "repositioning",
+        "target_node_id": 10
+      },
+      {
+        "call_id": null,
+        "id": "amb-002",
+        "node_id": 2,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-003",
+        "node_id": 3,
+        "status": "available",
+        "target_node_id": null
+      }
+    ],
+    "calls": [],
+    "metrics": {
+      "mean_seconds": 0,
+      "p50_seconds": 0,
+      "p90_seconds": 0,
+      "p95_seconds": 0,
+      "policy": "optimized",
+      "queued_calls": 0,
+      "reposition_km": 1.2,
+      "unserved_calls": 0,
+      "within_12m_pct": 0,
+      "within_20m_pct": 0,
+      "within_8m_pct": 0,
+      "worst_district_p90_seconds": 0
+    },
+    "minute": 0,
+    "policy": "optimized"
+  },
+  {
+    "active_scenario_ids": [],
+    "ambulances": [
+      {
+        "call_id": "call-0001",
+        "id": "amb-001",
+        "node_id": 1,
+        "status": "dispatched",
+        "target_node_id": 20
+      },
+      {
+        "call_id": null,
+        "id": "amb-002",
+        "node_id": 2,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-003",
+        "node_id": 3,
+        "status": "available",
+        "target_node_id": null
+      }
+    ],
+    "calls": [
+      {
+        "h3_cell": "88a8100c05fffff",
+        "id": "call-0001",
+        "node_id": 20,
+        "occurred_at_minute": 5,
+        "priority": 1,
+        "response_seconds": null,
+        "status": "dispatched"
+      }
+    ],
+    "metrics": {
+      "mean_seconds": null,
+      "p50_seconds": null,
+      "p90_seconds": null,
+      "p95_seconds": null,
+      "policy": "baseline",
+      "queued_calls": 0,
+      "reposition_km": 0,
+      "unserved_calls": 0,
+      "within_12m_pct": null,
+      "within_20m_pct": null,
+      "within_8m_pct": null,
+      "worst_district_p90_seconds": null
+    },
+    "minute": 5,
+    "policy": "baseline"
+  },
+  {
+    "active_scenario_ids": [],
+    "ambulances": [
+      {
+        "call_id": "call-0001",
+        "id": "amb-001",
+        "node_id": 10,
+        "status": "dispatched",
+        "target_node_id": 20
+      },
+      {
+        "call_id": null,
+        "id": "amb-002",
+        "node_id": 2,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-003",
+        "node_id": 3,
+        "status": "available",
+        "target_node_id": null
+      }
+    ],
+    "calls": [
+      {
+        "h3_cell": "88a8100c05fffff",
+        "id": "call-0001",
+        "node_id": 20,
+        "occurred_at_minute": 5,
+        "priority": 1,
+        "response_seconds": null,
+        "status": "dispatched"
+      }
+    ],
+    "metrics": {
+      "mean_seconds": null,
+      "p50_seconds": null,
+      "p90_seconds": null,
+      "p95_seconds": null,
+      "policy": "optimized",
+      "queued_calls": 0,
+      "reposition_km": 1.2,
+      "unserved_calls": 0,
+      "within_12m_pct": null,
+      "within_20m_pct": null,
+      "within_8m_pct": null,
+      "worst_district_p90_seconds": null
+    },
+    "minute": 5,
+    "policy": "optimized"
+  },
+  {
+    "active_scenario_ids": [],
+    "ambulances": [
+      {
+        "call_id": "call-0001",
+        "id": "amb-001",
+        "node_id": 20,
+        "status": "on_scene",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-002",
+        "node_id": 2,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-003",
+        "node_id": 3,
+        "status": "available",
+        "target_node_id": null
+      }
+    ],
+    "calls": [
+      {
+        "h3_cell": "88a8100c05fffff",
+        "id": "call-0001",
+        "node_id": 20,
+        "occurred_at_minute": 5,
+        "priority": 1,
+        "response_seconds": 540,
+        "status": "on_scene"
+      }
+    ],
+    "metrics": {
+      "mean_seconds": 540,
+      "p50_seconds": 540,
+      "p90_seconds": 540,
+      "p95_seconds": 540,
+      "policy": "baseline",
+      "queued_calls": 0,
+      "reposition_km": 0,
+      "unserved_calls": 0,
+      "within_12m_pct": 100,
+      "within_20m_pct": 100,
+      "within_8m_pct": 0,
+      "worst_district_p90_seconds": 540
+    },
+    "minute": 10,
+    "policy": "baseline"
+  },
+  {
+    "active_scenario_ids": [],
+    "ambulances": [
+      {
+        "call_id": "call-0001",
+        "id": "amb-001",
+        "node_id": 20,
+        "status": "on_scene",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-002",
+        "node_id": 2,
+        "status": "available",
+        "target_node_id": null
+      },
+      {
+        "call_id": null,
+        "id": "amb-003",
+        "node_id": 3,
+        "status": "available",
+        "target_node_id": null
+      }
+    ],
+    "calls": [
+      {
+        "h3_cell": "88a8100c05fffff",
+        "id": "call-0001",
+        "node_id": 20,
+        "occurred_at_minute": 5,
+        "priority": 1,
+        "response_seconds": 360,
+        "status": "on_scene"
+      }
+    ],
+    "metrics": {
+      "mean_seconds": 360,
+      "p50_seconds": 360,
+      "p90_seconds": 360,
+      "p95_seconds": 360,
+      "policy": "optimized",
+      "queued_calls": 0,
+      "reposition_km": 1.2,
+      "unserved_calls": 0,
+      "within_12m_pct": 100,
+      "within_20m_pct": 100,
+      "within_8m_pct": 100,
+      "worst_district_p90_seconds": 360
+    },
+    "minute": 10,
+    "policy": "optimized"
+  }
+]

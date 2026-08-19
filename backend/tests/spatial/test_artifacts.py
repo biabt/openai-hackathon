@@ -41,7 +41,7 @@ def test_artifact_round_trip_checksums_crs_and_weights(tmp_path: Path) -> None:
     assert loaded["crs"] == "EPSG:4326"
     assert gpd.read_file(tmp_path / "h3_cells.geojson").crs.to_epsg() == 4326
     assert pq.read_table(tmp_path / "nodes.parquet").schema.metadata[b"geo_crs"] == b"EPSG:4326"
-    assert pq.read_table(tmp_path / "edges.parquet").column("geometry_wkb").type.__str__() == "binary"
+    assert pq.read_table(tmp_path / "edges.parquet").column("geometry_wkb").type.__str__() == "string"
     weights = pq.read_table(tmp_path / "edge_h3_weights.parquet").to_pandas()
     assert weights.groupby("edge_id")["weight"].sum().tolist() == pytest.approx([1.0] * len(edges), abs=1e-6)
     assert {entry["sha256"] for entry in loaded["artifacts"]} == {

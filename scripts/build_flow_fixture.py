@@ -66,7 +66,7 @@ def _write_observations(path: Path, forward_edge: str) -> int:
     schema = pa.schema(
         [
             ("camera_id", pa.string()),
-            ("edge_id", pa.string()),
+            ("edge_id", pa.int64()),
             ("bucket_start", pa.timestamp("us", tz="UTC")),
             ("object_class", pa.string()),
             ("direction", pa.string()),
@@ -96,20 +96,20 @@ def build_fixture(output: Path) -> dict[str, object]:
 
     graph = nx.MultiDiGraph()
     coordinates = {
-        "west-1": (-46.6500, -23.5600),
-        "west-2": (-46.6475, -23.5585),
-        "east-1": (-46.6350, -23.5510),
-        "east-2": (-46.6325, -23.5495),
+        1: (-46.6500, -23.5600),
+        2: (-46.6475, -23.5585),
+        3: (-46.6350, -23.5510),
+        4: (-46.6325, -23.5495),
     }
     for node_id, (x, y) in coordinates.items():
         graph.add_node(node_id, x=x, y=y)
     arcs = [
-        ("west-1", "west-2", "west-forward", "residential", 30),
-        ("west-2", "west-1", "west-reverse", "residential", 30),
-        ("west-2", "east-1", "connector-forward", "primary", 50),
-        ("east-1", "west-2", "connector-reverse", "primary", 50),
-        ("east-1", "east-2", "east-forward", "secondary", 40),
-        ("east-2", "east-1", "east-reverse", "secondary", 40),
+        (1, 2, "west-forward", "residential", 30),
+        (2, 1, "west-reverse", "residential", 30),
+        (2, 3, "connector-forward", "primary", 50),
+        (3, 2, "connector-reverse", "primary", 50),
+        (3, 4, "east-forward", "secondary", 40),
+        (4, 3, "east-reverse", "secondary", 40),
     ]
     for u, v, key, highway, speed in arcs:
         graph.add_edge(u, v, key=key, highway=highway, maxspeed=speed, osmid=key)
@@ -123,8 +123,8 @@ def build_fixture(output: Path) -> dict[str, object]:
         geometry="geometry",
         crs="EPSG:4326",
     )
-    forward = next(edge for edge in edges if edge.u == "west-2" and edge.v == "east-1")
-    reverse = next(edge for edge in edges if edge.u == "east-1" and edge.v == "west-2")
+    forward = next(edge for edge in edges if edge.u == 1 and edge.v == 2)
+    reverse = next(edge for edge in edges if edge.u == 2 and edge.v == 1)
 
     output.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix="city-os-flow-fixture-", dir=output.parent) as temp_name:

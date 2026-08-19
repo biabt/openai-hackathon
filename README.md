@@ -275,7 +275,12 @@ make test
 make demo
 ```
 
-Run the automated check with:
+`make demo` validates bundled assets and starts the local API and command portal. Open the portal address printed in the terminal.
+
+On Windows, run the Make targets from Git Bash or WSL. The portable Python launchers can also be
+run from PowerShell, for example `uv run --project backend python scripts/demo_start.py`.
+
+For the automated release check:
 
 ```bash
 make smoke
@@ -302,8 +307,10 @@ make smoke
 
 ## Documentation
 
-- [Product design](docs/superpowers/specs/2026-08-19-ambulance-flow-allocation-design.md)
-- [Integration plan](docs/superpowers/plans/2026-08-19-city-os-parallel-integration.md)
+- [Demo and release runbook](docs/demo-runbook.md)
+- [Privacy and data handling](docs/privacy-and-data.md)
+- [Product and technical design](docs/superpowers/specs/2026-08-19-ambulance-flow-allocation-design.md)
+- [Parallel implementation and integration plan](docs/superpowers/plans/2026-08-19-city-os-parallel-integration.md)
 - [Data and flow engine](docs/superpowers/plans/2026-08-19-city-os-data-flow-engine.md)
 - [Simulation and API](docs/superpowers/plans/2026-08-19-city-os-simulation-api.md)
 - [Command portal](docs/superpowers/plans/2026-08-19-city-os-command-portal.md)

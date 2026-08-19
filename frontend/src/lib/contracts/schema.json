@@ -1,0 +1,1257 @@
+{
+  "$defs": {
+    "AmbulanceSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "call_id": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Call Id"
+        },
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "node_id": {
+          "minimum": 0,
+          "title": "Node Id",
+          "type": "integer"
+        },
+        "status": {
+          "$ref": "#/$defs/AmbulanceStatus"
+        },
+        "target_node_id": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Target Node Id"
+        }
+      },
+      "required": [
+        "id",
+        "status",
+        "node_id",
+        "target_node_id",
+        "call_id"
+      ],
+      "title": "AmbulanceSnapshot",
+      "type": "object"
+    },
+    "AmbulanceStatus": {
+      "enum": [
+        "available",
+        "repositioning",
+        "dispatched",
+        "on_scene",
+        "transporting",
+        "handoff",
+        "released"
+      ],
+      "title": "AmbulanceStatus",
+      "type": "string"
+    },
+    "ApiError": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ApiError",
+      "type": "object"
+    },
+    "ArtifactChecksum": {
+      "additionalProperties": false,
+      "description": "The immutable checksum of a manifest-listed artifact.",
+      "properties": {
+        "algorithm": {
+          "const": "sha256",
+          "title": "Algorithm",
+          "type": "string"
+        },
+        "value": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "title": "ArtifactChecksum",
+      "type": "object"
+    },
+    "ArtifactEntry": {
+      "additionalProperties": false,
+      "description": "A single local artifact listed in a versioned artifact manifest.",
+      "properties": {
+        "checksum": {
+          "$ref": "#/$defs/ArtifactChecksum"
+        },
+        "media_type": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "pattern": "^(?=.*\\S)(?!/)(?!.*\\\\)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*//).+$",
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "path",
+        "media_type",
+        "checksum"
+      ],
+      "title": "ArtifactEntry",
+      "type": "object"
+    },
+    "ArtifactManifest": {
+      "additionalProperties": false,
+      "description": "A deterministic list of checksum-addressed local artifacts.",
+      "properties": {
+        "artifacts": {
+          "items": {
+            "$ref": "#/$defs/ArtifactEntry"
+          },
+          "minItems": 1,
+          "title": "Artifacts",
+          "type": "array"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema_version",
+        "artifacts"
+      ],
+      "title": "ArtifactManifest",
+      "type": "object"
+    },
+    "BootstrapResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "api_version": {
+          "const": "1.0",
+          "title": "Api Version",
+          "type": "string"
+        },
+        "bounds": {
+          "$ref": "#/$defs/GeographicBounds"
+        },
+        "city": {
+          "const": "São Paulo",
+          "title": "City",
+          "type": "string"
+        },
+        "default_seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Default Seed",
+          "type": "integer"
+        },
+        "fleet_size_bounds": {
+          "$ref": "#/$defs/FleetSizeBounds"
+        },
+        "forecast_horizon_minutes": {
+          "const": 60,
+          "title": "Forecast Horizon Minutes",
+          "type": "integer"
+        },
+        "frame_interval_minutes": {
+          "const": 5,
+          "title": "Frame Interval Minutes",
+          "type": "integer"
+        },
+        "h3_resolution": {
+          "const": 8,
+          "title": "H3 Resolution",
+          "type": "integer"
+        },
+        "layer_urls": {
+          "patternProperties": {
+            "\\S": {
+              "pattern": "^/\\S+$",
+              "type": "string"
+            }
+          },
+          "propertyNames": {
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "title": "Layer Urls",
+          "type": "object"
+        },
+        "optimization_cadence_minutes": {
+          "const": 15,
+          "title": "Optimization Cadence Minutes",
+          "type": "integer"
+        },
+        "scenarios": {
+          "items": {
+            "$ref": "#/$defs/ScenarioObservation"
+          },
+          "title": "Scenarios",
+          "type": "array"
+        },
+        "simulation_duration_minutes": {
+          "const": 360,
+          "title": "Simulation Duration Minutes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "api_version",
+        "city",
+        "h3_resolution",
+        "simulation_duration_minutes",
+        "frame_interval_minutes",
+        "optimization_cadence_minutes",
+        "forecast_horizon_minutes",
+        "default_seed",
+        "bounds",
+        "fleet_size_bounds",
+        "scenarios",
+        "layer_urls"
+      ],
+      "title": "BootstrapResponse",
+      "type": "object"
+    },
+    "CallPriority": {
+      "enum": [
+        1,
+        2,
+        3
+      ],
+      "title": "CallPriority",
+      "type": "integer"
+    },
+    "CallSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "h3_cell": {
+          "pattern": "^[0-9a-f]{15}$",
+          "title": "H3 Cell",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "node_id": {
+          "minimum": 0,
+          "title": "Node Id",
+          "type": "integer"
+        },
+        "occurred_at_minute": {
+          "maximum": 360,
+          "minimum": 0,
+          "title": "Occurred At Minute",
+          "type": "integer"
+        },
+        "priority": {
+          "$ref": "#/$defs/CallPriority"
+        },
+        "response_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Response Seconds"
+        },
+        "status": {
+          "$ref": "#/$defs/CallStatus"
+        }
+      },
+      "required": [
+        "id",
+        "h3_cell",
+        "node_id",
+        "priority",
+        "status",
+        "occurred_at_minute",
+        "response_seconds"
+      ],
+      "title": "CallSnapshot",
+      "type": "object"
+    },
+    "CallStatus": {
+      "enum": [
+        "pending",
+        "queued",
+        "dispatched",
+        "on_scene",
+        "transporting",
+        "handoff",
+        "completed",
+        "unserved"
+      ],
+      "title": "CallStatus",
+      "type": "string"
+    },
+    "CameraObservation": {
+      "additionalProperties": false,
+      "description": "An aggregated, privacy-safe camera count for one edge and time bucket.",
+      "properties": {
+        "bucket_start": {
+          "format": "date-time",
+          "title": "Bucket Start",
+          "type": "string"
+        },
+        "camera_id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Camera Id",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "count": {
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        },
+        "direction": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Direction",
+          "type": "string"
+        },
+        "edge_id": {
+          "minimum": 0,
+          "title": "Edge Id",
+          "type": "integer"
+        },
+        "object_class": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Object Class",
+          "type": "string"
+        }
+      },
+      "required": [
+        "camera_id",
+        "edge_id",
+        "bucket_start",
+        "object_class",
+        "direction",
+        "count",
+        "confidence"
+      ],
+      "title": "CameraObservation",
+      "type": "object"
+    },
+    "EdgeState": {
+      "additionalProperties": false,
+      "description": "A flow-derived state for one directed edge and time bucket.",
+      "properties": {
+        "bucket_start": {
+          "format": "date-time",
+          "title": "Bucket Start",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "edge_id": {
+          "minimum": 0,
+          "title": "Edge Id",
+          "type": "integer"
+        },
+        "flow_vph": {
+          "minimum": 0,
+          "title": "Flow Vph",
+          "type": "number"
+        },
+        "occupancy_people": {
+          "minimum": 0,
+          "title": "Occupancy People",
+          "type": "number"
+        },
+        "speed_kph": {
+          "minimum": 0,
+          "title": "Speed Kph",
+          "type": "number"
+        },
+        "travel_seconds": {
+          "minimum": 0,
+          "title": "Travel Seconds",
+          "type": "number"
+        }
+      },
+      "required": [
+        "edge_id",
+        "bucket_start",
+        "flow_vph",
+        "speed_kph",
+        "travel_seconds",
+        "occupancy_people",
+        "confidence"
+      ],
+      "title": "EdgeState",
+      "type": "object"
+    },
+    "FleetSizeBounds": {
+      "additionalProperties": false,
+      "properties": {
+        "default": {
+          "minimum": 1,
+          "title": "Default",
+          "type": "integer"
+        },
+        "maximum": {
+          "minimum": 1,
+          "title": "Maximum",
+          "type": "integer"
+        },
+        "minimum": {
+          "minimum": 1,
+          "title": "Minimum",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "minimum",
+        "maximum",
+        "default"
+      ],
+      "title": "FleetSizeBounds",
+      "type": "object"
+    },
+    "GeographicBounds": {
+      "additionalProperties": false,
+      "properties": {
+        "max_latitude": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Max Latitude",
+          "type": "number"
+        },
+        "max_longitude": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Max Longitude",
+          "type": "number"
+        },
+        "min_latitude": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Min Latitude",
+          "type": "number"
+        },
+        "min_longitude": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "Min Longitude",
+          "type": "number"
+        }
+      },
+      "required": [
+        "min_longitude",
+        "min_latitude",
+        "max_longitude",
+        "max_latitude"
+      ],
+      "title": "GeographicBounds",
+      "type": "object"
+    },
+    "H3Density": {
+      "additionalProperties": false,
+      "description": "An H3-cell density estimate for a five-minute observation bucket.",
+      "properties": {
+        "bucket_start": {
+          "format": "date-time",
+          "title": "Bucket Start",
+          "type": "string"
+        },
+        "cell": {
+          "pattern": "^[0-9a-f]{15}$",
+          "title": "Cell",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "density_people_km2": {
+          "minimum": 0,
+          "title": "Density People Km2",
+          "type": "number"
+        },
+        "emergency_intensity_hour": {
+          "minimum": 0,
+          "title": "Emergency Intensity Hour",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cell",
+        "bucket_start",
+        "density_people_km2",
+        "emergency_intensity_hour",
+        "confidence"
+      ],
+      "title": "H3Density",
+      "type": "object"
+    },
+    "MethodologyMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "calibration_description": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Calibration Description",
+          "type": "string"
+        },
+        "calibration_target_seconds": {
+          "const": 1260,
+          "title": "Calibration Target Seconds",
+          "type": "integer"
+        },
+        "call_tape_seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Call Tape Seed",
+          "type": "integer"
+        },
+        "data_label": {
+          "const": "simulated",
+          "title": "Data Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "call_tape_seed",
+        "calibration_target_seconds",
+        "calibration_description",
+        "data_label"
+      ],
+      "title": "MethodologyMetadata",
+      "type": "object"
+    },
+    "PairedMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/SimulationMetrics"
+        },
+        "optimized": {
+          "$ref": "#/$defs/SimulationMetrics"
+        }
+      },
+      "required": [
+        "baseline",
+        "optimized"
+      ],
+      "title": "PairedMetrics",
+      "type": "object"
+    },
+    "RoadEdge": {
+      "additionalProperties": false,
+      "description": "A directed road segment and its baseline travel characteristics.",
+      "properties": {
+        "capacity_vph": {
+          "minimum": 0,
+          "title": "Capacity Vph",
+          "type": "number"
+        },
+        "edge_id": {
+          "minimum": 0,
+          "title": "Edge Id",
+          "type": "integer"
+        },
+        "free_flow_seconds": {
+          "exclusiveMinimum": 0,
+          "title": "Free Flow Seconds",
+          "type": "number"
+        },
+        "geometry_wkb": {
+          "contentEncoding": "base64",
+          "minLength": 1,
+          "title": "Geometry Wkb",
+          "type": "string"
+        },
+        "length_m": {
+          "exclusiveMinimum": 0,
+          "title": "Length M",
+          "type": "number"
+        },
+        "u": {
+          "minimum": 0,
+          "title": "U",
+          "type": "integer"
+        },
+        "v": {
+          "minimum": 0,
+          "title": "V",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "edge_id",
+        "u",
+        "v",
+        "length_m",
+        "free_flow_seconds",
+        "capacity_vph",
+        "geometry_wkb"
+      ],
+      "title": "RoadEdge",
+      "type": "object"
+    },
+    "RoadNode": {
+      "additionalProperties": false,
+      "description": "A directed-road-network node located in WGS84 coordinates.",
+      "properties": {
+        "h3_cell": {
+          "pattern": "^[0-9a-f]{15}$",
+          "title": "H3 Cell",
+          "type": "string"
+        },
+        "node_id": {
+          "minimum": 0,
+          "title": "Node Id",
+          "type": "integer"
+        },
+        "x": {
+          "maximum": 180,
+          "minimum": -180,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 90,
+          "minimum": -90,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "node_id",
+        "x",
+        "y",
+        "h3_cell"
+      ],
+      "title": "RoadNode",
+      "type": "object"
+    },
+    "ScenarioObservation": {
+      "additionalProperties": false,
+      "properties": {
+        "affected_h3": {
+          "items": {
+            "pattern": "^[0-9a-f]{15}$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Affected H3",
+          "type": "array"
+        },
+        "blocked_edges": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Blocked Edges",
+          "type": "array"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "demand_multiplier": {
+          "maximum": 5,
+          "minimum": 0.5,
+          "title": "Demand Multiplier",
+          "type": "number"
+        },
+        "ends_at": {
+          "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+          "title": "Ends At",
+          "type": "string"
+        },
+        "id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/ScenarioSource"
+        },
+        "starts_at": {
+          "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$",
+          "title": "Starts At",
+          "type": "string"
+        },
+        "travel_penalty": {
+          "maximum": 10,
+          "minimum": 1,
+          "title": "Travel Penalty",
+          "type": "number"
+        },
+        "type": {
+          "$ref": "#/$defs/ScenarioType"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "starts_at",
+        "ends_at",
+        "affected_h3",
+        "demand_multiplier",
+        "travel_penalty",
+        "blocked_edges",
+        "confidence",
+        "source"
+      ],
+      "title": "ScenarioObservation",
+      "type": "object"
+    },
+    "ScenarioParseRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "text": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "title": "ScenarioParseRequest",
+      "type": "object"
+    },
+    "ScenarioParseResponse": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "used_fallback": {
+                "const": true
+              }
+            },
+            "required": [
+              "used_fallback"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observation": {
+          "$ref": "#/$defs/ScenarioObservation"
+        },
+        "used_fallback": {
+          "title": "Used Fallback",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "observation",
+        "used_fallback",
+        "error"
+      ],
+      "title": "ScenarioParseResponse",
+      "type": "object"
+    },
+    "ScenarioSource": {
+      "enum": [
+        "simulated"
+      ],
+      "title": "ScenarioSource",
+      "type": "string"
+    },
+    "ScenarioType": {
+      "enum": [
+        "event",
+        "flood",
+        "demonstration",
+        "transit_disruption"
+      ],
+      "title": "ScenarioType",
+      "type": "string"
+    },
+    "SimulationCreatedResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "simulation_id": {
+          "pattern": "^sim-[A-Za-z0-9_-]+$",
+          "title": "Simulation Id",
+          "type": "string"
+        },
+        "status": {
+          "const": "queued",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "simulation_id",
+        "status"
+      ],
+      "title": "SimulationCreatedResponse",
+      "type": "object"
+    },
+    "SimulationFrame": {
+      "additionalProperties": false,
+      "properties": {
+        "active_scenario_ids": {
+          "items": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title": "Active Scenario Ids",
+          "type": "array"
+        },
+        "ambulances": {
+          "items": {
+            "$ref": "#/$defs/AmbulanceSnapshot"
+          },
+          "title": "Ambulances",
+          "type": "array"
+        },
+        "calls": {
+          "items": {
+            "$ref": "#/$defs/CallSnapshot"
+          },
+          "title": "Calls",
+          "type": "array"
+        },
+        "metrics": {
+          "$ref": "#/$defs/SimulationMetrics"
+        },
+        "minute": {
+          "maximum": 360,
+          "minimum": 0,
+          "multipleOf": 5,
+          "title": "Minute",
+          "type": "integer"
+        },
+        "policy": {
+          "$ref": "#/$defs/SimulationPolicy"
+        }
+      },
+      "required": [
+        "minute",
+        "policy",
+        "ambulances",
+        "calls",
+        "metrics",
+        "active_scenario_ids"
+      ],
+      "title": "SimulationFrame",
+      "type": "object"
+    },
+    "SimulationJobResponse": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "methodology": {
+                "type": "null"
+              },
+              "metrics": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "status": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "methodology": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "metrics": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        },
+        {
+          "else": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "status": {
+                "const": "failed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ApiError"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "methodology": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MethodologyMetadata"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metrics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PairedMetrics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request": {
+          "$ref": "#/$defs/SimulationRequest"
+        },
+        "simulation_id": {
+          "pattern": "^sim-[A-Za-z0-9_-]+$",
+          "title": "Simulation Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/SimulationJobStatus"
+        }
+      },
+      "required": [
+        "simulation_id",
+        "request",
+        "status",
+        "metrics",
+        "methodology",
+        "error"
+      ],
+      "title": "SimulationJobResponse",
+      "type": "object"
+    },
+    "SimulationJobStatus": {
+      "enum": [
+        "queued",
+        "running",
+        "completed",
+        "failed"
+      ],
+      "title": "SimulationJobStatus",
+      "type": "string"
+    },
+    "SimulationMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "mean_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Mean Seconds"
+        },
+        "p50_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P50 Seconds"
+        },
+        "p90_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P90 Seconds"
+        },
+        "p95_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "P95 Seconds"
+        },
+        "policy": {
+          "$ref": "#/$defs/SimulationPolicy"
+        },
+        "queued_calls": {
+          "minimum": 0,
+          "title": "Queued Calls",
+          "type": "integer"
+        },
+        "reposition_km": {
+          "minimum": 0,
+          "title": "Reposition Km",
+          "type": "number"
+        },
+        "unserved_calls": {
+          "minimum": 0,
+          "title": "Unserved Calls",
+          "type": "integer"
+        },
+        "within_12m_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Within 12M Pct"
+        },
+        "within_20m_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Within 20M Pct"
+        },
+        "within_8m_pct": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Within 8M Pct"
+        },
+        "worst_district_p90_seconds": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Worst District P90 Seconds"
+        }
+      },
+      "required": [
+        "policy",
+        "mean_seconds",
+        "p50_seconds",
+        "p90_seconds",
+        "p95_seconds",
+        "within_8m_pct",
+        "within_12m_pct",
+        "within_20m_pct",
+        "worst_district_p90_seconds",
+        "queued_calls",
+        "unserved_calls",
+        "reposition_km"
+      ],
+      "title": "SimulationMetrics",
+      "type": "object"
+    },
+    "SimulationPolicy": {
+      "enum": [
+        "baseline",
+        "optimized"
+      ],
+      "title": "SimulationPolicy",
+      "type": "string"
+    },
+    "SimulationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "fleet_size": {
+          "minimum": 1,
+          "title": "Fleet Size",
+          "type": "integer"
+        },
+        "scenario_id": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Scenario Id",
+          "type": "string"
+        },
+        "seed": {
+          "maximum": 2147483647,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "scenario_id",
+        "fleet_size",
+        "seed"
+      ],
+      "title": "SimulationRequest",
+      "type": "object"
+    }
+  },
+  "$id": "https://city-os.local/schema/city-os/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/BootstrapResponse"
+    },
+    {
+      "$ref": "#/$defs/SimulationFrame"
+    }
+  ],
+  "title": "City OS C0 API Contract"
+}

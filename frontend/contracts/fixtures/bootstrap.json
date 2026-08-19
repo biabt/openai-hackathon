@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0.0",
+  "city": "São Paulo",
+  "bounds": [-46.826, -24.008, -46.365, -23.357],
+  "scenarios": [
+    {
+      "id": "flood-aricanduva-1730",
+      "type": "flood",
+      "starts_at": "17:30",
+      "ends_at": "19:00",
+      "affected_h3": ["88a8100c05fffff"],
+      "demand_multiplier": 1.25,
+      "travel_penalty": 2,
+      "blocked_edges": [101],
+      "confidence": 0.9,
+      "source": "simulated"
+    },
+    {
+      "id": "concert-allianz-1800",
+      "type": "event",
+      "starts_at": "18:00",
+      "ends_at": "21:00",
+      "affected_h3": ["88a8100d2dfffff"],
+      "demand_multiplier": 1.6,
+      "travel_penalty": 1.25,
+      "blocked_edges": [],
+      "confidence": 0.85,
+      "source": "simulated"
+    },
+    {
+      "id": "blocked-centro-1830",
+      "type": "blocked_road",
+      "starts_at": "18:30",
+      "ends_at": "20:00",
+      "affected_h3": ["88a8100c67fffff"],
+      "demand_multiplier": 1,
+      "travel_penalty": 3,
+      "blocked_edges": [102],
+      "confidence": 0.8,
+      "source": "simulated"
+    }
+  ],
+  "layer_urls": { "map_style": "/map/style.json", "pmtiles": "/map/sao-paulo.pmtiles" },
+  "default_seed": 42,
+  "default_fleet_size": 120,
+  "duration_minutes": 360,
+  "frame_interval_minutes": 5,
+  "nodes": [
+    { "node_id": 1, "x": -46.655, "y": -23.548, "h3_cell": "88a8100c67fffff" },
+    { "node_id": 2, "x": -46.521, "y": -23.557, "h3_cell": "88a8100c05fffff" },
+    { "node_id": 3, "x": -46.678, "y": -23.527, "h3_cell": "88a8100d2dfffff" }
+  ],
+  "edges": [
+    { "edge_id": 101, "u": 1, "v": 2, "length_m": 11200, "free_flow_seconds": 930, "capacity_vph": 1800, "geometry_wkb": "010200000002000000" },
+    { "edge_id": 102, "u": 1, "v": 3, "length_m": 4200, "free_flow_seconds": 390, "capacity_vph": 1400, "geometry_wkb": "010200000002000000" }
+  ],
+  "cameras": [
+    { "camera_id": "cet-aricanduva-01", "edge_id": 101, "x": -46.54, "y": -23.556, "confidence": 0.88 }
+  ],
+  "edge_states": [
+    { "edge_id": 101, "bucket_start": "17:30", "flow_vph": 1320, "speed_kph": 24, "travel_seconds": 1680, "occupancy_people": 616, "confidence": 0.74 },
+    { "edge_id": 102, "bucket_start": "17:30", "flow_vph": 890, "speed_kph": 31, "travel_seconds": 488, "occupancy_people": 121, "confidence": 0.69 }
+  ],
+  "h3_density": [
+    { "cell": "88a8100c05fffff", "bucket_start": "17:30", "density_people_km2": 13200, "emergency_intensity_hour": 1.8, "confidence": 0.71 },
+    { "cell": "88a8100d2dfffff", "bucket_start": "17:30", "density_people_km2": 10100, "emergency_intensity_hour": 1.2, "confidence": 0.67 }
+  ]
+}

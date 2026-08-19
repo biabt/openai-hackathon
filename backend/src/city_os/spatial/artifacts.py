@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -109,7 +110,9 @@ def _edge_h3_weights(edges: list[dict[str, Any]], cells: list[dict[str, Any]]) -
 
     result: list[dict[str, Any]] = []
     for edge in edges:
-        line = wkb.loads(bytes(edge["geometry_wkb"]))
+        geometry = edge["geometry_wkb"]
+        encoded = base64.b64decode(geometry) if isinstance(geometry, str) else bytes(geometry)
+        line = wkb.loads(encoded)
         raw: list[tuple[str, float]] = []
         for cell in cells:
             length = float(line.intersection(cell["geometry"]).length)
@@ -121,7 +124,7 @@ def _edge_h3_weights(edges: list[dict[str, Any]], cells: list[dict[str, Any]]) -
             raw = [(nearest["cell"], 1.0)]
         total = sum(value for _, value in raw)
         for cell, value in raw:
-            result.append({"edge_id": str(edge["edge_id"]), "cell": cell, "weight": value / total})
+            result.append({"edge_id": int(edge["edge_id"]), "cell": cell, "weight": value / total})
     return sorted(result, key=lambda row: (row["edge_id"], row["cell"]))
 
 
@@ -167,17 +170,17 @@ def write_spatial_artifacts(
 
     schemas = {
         "nodes.parquet": pa.schema(
-            [("node_id", pa.string()), ("x", pa.float64()), ("y", pa.float64()), ("h3_cell", pa.string())]
+            [("node_id", pa.int64()), ("x", pa.float64()), ("y", pa.float64()), ("h3_cell", pa.string())]
         ),
         "edges.parquet": pa.schema(
             [
-                ("edge_id", pa.string()), ("u", pa.string()), ("v", pa.string()),
+                ("edge_id", pa.int64()), ("u", pa.int64()), ("v", pa.int64()),
                 ("length_m", pa.float64()), ("free_flow_seconds", pa.float64()),
-                ("capacity_vph", pa.float64()), ("geometry_wkb", pa.binary()),
+                ("capacity_vph", pa.float64()), ("geometry_wkb", pa.string()),
             ]
         ),
         "edge_h3_weights.parquet": pa.schema(
-            [("edge_id", pa.string()), ("cell", pa.string()), ("weight", pa.float64())]
+            [("edge_id", pa.int64()), ("cell", pa.string()), ("weight", pa.float64())]
         ),
     }
     row_sets = {"nodes.parquet": node_rows, "edges.parquet": edge_rows, "edge_h3_weights.parquet": weights}

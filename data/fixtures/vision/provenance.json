@@ -13,7 +13,7 @@
     "latitude": null,
     "longitude": null
   },
-  "sha256": "4023bd39e73fed7bb0de7e617844c37892bb0a783fd504eedc638148b5ba98dd",
+  "sha256": "8956339499895a8bc6480a220f109a566f67b2c51dc17219da958d302f817825",
   "sha256_file": "synthetic_detections.json",
   "authorization": "Repository-authored synthetic fixture authorized for automated tests and demo validation.",
   "privacy": "Contains numeric bounding boxes and aggregate ground truth only. Contains no images, people, faces, credentials, persistent identities, or real camera observations.",

@@ -28,12 +28,9 @@ class JobRegistry:
         self.capacity = capacity
         self._jobs: OrderedDict[str, Job] = OrderedDict()
         self._lock = RLock()
-        self._sequence = 0
 
     def create(self, request: SimulationRequest) -> Job:
-        with self._lock:
-            self._sequence += 1
-            simulation_id = f"sim-{self._sequence:06d}"
+        simulation_id = f"sim-{request.seed}-{request.fleet_size}-{request.scenario_id}"
         try:
             result: PairedResult = run_paired_simulation(request)
             response = SimulationJobResponse(

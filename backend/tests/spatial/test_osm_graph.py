@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import networkx as nx
 import pytest
+import base64
 from shapely import wkb
 from shapely.geometry import LineString
 
@@ -39,18 +40,18 @@ def test_normalization_retains_reverse_and_parallel_arcs_stably() -> None:
     assert [(edge.edge_id, edge.u, edge.v) for edge in edges] == [
         (edge.edge_id, edge.u, edge.v) for edge in reordered_edges
     ]
-    assert [node.node_id for node in nodes] == ["1", "2", "3"]
+    assert [node.node_id for node in nodes] == [0, 1, 2]
     assert [(node.node_id, node.h3_cell) for node in nodes] == [
         (node.node_id, node.h3_cell) for node in reordered_nodes
     ]
-    assert {(edge.u, edge.v) for edge in edges} >= {("1", "2"), ("2", "1"), ("2", "3")}
+    assert {(edge.u, edge.v) for edge in edges} >= {(0, 1), (1, 0), (1, 2)}
     assert all(edge.free_flow_seconds > 0 and edge.capacity_vph > 0 for edge in edges)
-    assert all(wkb.loads(edge.geometry_wkb).geom_type == "LineString" for edge in edges)
+    assert all(wkb.loads(base64.b64decode(edge.geometry_wkb)).geom_type == "LineString" for edge in edges)
 
 
 def test_speed_capacity_and_validation() -> None:
     _, edges = normalize_osm_graph(make_graph())
-    primary = next(edge for edge in edges if edge.u == "1" and edge.length_m == 1_000)
+    primary = next(edge for edge in edges if edge.u == 0 and edge.length_m == 1_000)
     assert primary.free_flow_seconds == pytest.approx(72.0)
     assert primary.capacity_vph == 1_500
 

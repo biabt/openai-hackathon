@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import math
@@ -16,16 +17,16 @@ try:  # Developer B owns these contracts; retain an import-only compatibility se
 except ImportError:  # pragma: no cover - used only before the contract package lands.
     @dataclass(frozen=True, slots=True)
     class RoadNode:
-        node_id: str
+        node_id: int
         x: float
         y: float
         h3_cell: str
 
     @dataclass(frozen=True, slots=True)
     class RoadEdge:
-        edge_id: str
-        u: str
-        v: str
+        edge_id: int
+        u: int
+        v: int
         length_m: float
         free_flow_seconds: float
         capacity_vph: float
@@ -140,7 +141,7 @@ def _record(model: type[Any], **values: Any) -> Any:
     return model(**values)
 
 
-def _stable_edge_id(u: Any, v: Any, key: Any, attrs: Mapping[str, Any], geometry_wkb: bytes) -> str:
+def _stable_edge_id(u: Any, v: Any, key: Any, attrs: Mapping[str, Any], geometry_wkb: bytes) -> int:
     identity = {
         "u": str(u),
         "v": str(v),
@@ -150,8 +151,8 @@ def _stable_edge_id(u: Any, v: Any, key: Any, attrs: Mapping[str, Any], geometry
         else str(attrs.get("osmid", "")),
         "geometry_sha256": hashlib.sha256(geometry_wkb).hexdigest(),
     }
-    digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:20]
-    return f"edge-{digest}"
+    digest = hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()[:15]
+    return int(digest, 16)
 
 
 def normalize_osm_graph(graph: Any, resolution: int = 8) -> tuple[list[RoadNode], list[RoadEdge]]:
@@ -165,13 +166,16 @@ def normalize_osm_graph(graph: Any, resolution: int = 8) -> tuple[list[RoadNode]
     if not getattr(graph, "is_directed", lambda: False)() or not getattr(graph, "is_multigraph", lambda: False)():
         raise TypeError("graph must be a directed MultiDiGraph")
 
+    original_ids = sorted(graph.nodes, key=str)
+    numeric_ids = {node_id: index for index, node_id in enumerate(original_ids)}
     nodes: list[RoadNode] = []
-    for node_id, data in graph.nodes(data=True):
+    for node_id in original_ids:
+        data = graph.nodes[node_id]
         try:
             x, y = float(data["x"]), float(data["y"])
         except (KeyError, TypeError, ValueError) as exc:
             raise ValueError(f"node {node_id!r} requires numeric x/y coordinates") from exc
-        nodes.append(_record(RoadNode, node_id=str(node_id), x=x, y=y, h3_cell=_h3_cell(y, x, resolution)))
+        nodes.append(_record(RoadNode, node_id=numeric_ids[node_id], x=x, y=y, h3_cell=_h3_cell(y, x, resolution)))
 
     edges: list[RoadEdge] = []
     for u, v, key, attrs in graph.edges(keys=True, data=True):
@@ -183,12 +187,12 @@ def normalize_osm_graph(graph: Any, resolution: int = 8) -> tuple[list[RoadNode]
             _record(
                 RoadEdge,
                 edge_id=_stable_edge_id(u, v, key, attrs, geometry_wkb),
-                u=str(u),
-                v=str(v),
+                u=numeric_ids[u],
+                v=numeric_ids[v],
                 length_m=length_m,
                 free_flow_seconds=length_m / (speed_kph * 1_000 / 3_600),
                 capacity_vph=_capacity(attrs),
-                geometry_wkb=geometry_wkb,
+                geometry_wkb=base64.b64encode(geometry_wkb).decode("ascii"),
             )
         )
 

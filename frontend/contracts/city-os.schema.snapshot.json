@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://city-os.local/schema/city-os.schema.json",
+  "title": "City OS MVP Contracts",
+  "type": "object",
+  "$defs": {
+    "Policy": { "type": "string", "enum": ["baseline", "optimized"] },
+    "AmbulanceStatus": { "type": "string", "enum": ["AVAILABLE", "REPOSITIONING", "DISPATCHED", "ON_SCENE", "TRANSPORTING", "HANDOFF", "RELEASED"] },
+    "CallStatus": { "type": "string", "enum": ["QUEUED", "DISPATCHED", "ON_SCENE", "TRANSPORTING", "COMPLETED", "UNSERVED"] },
+    "ScenarioType": { "type": "string", "enum": ["flood", "event", "blocked_road", "transit_disruption"] },
+    "SimulationJobStatus": { "type": "string", "enum": ["queued", "running", "completed", "failed"] },
+    "ScenarioObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "starts_at", "ends_at", "affected_h3", "demand_multiplier", "travel_penalty", "blocked_edges", "confidence", "source"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "$ref": "#/$defs/ScenarioType" },
+        "starts_at": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+        "ends_at": { "type": "string", "pattern": "^[0-2][0-9]:[0-5][0-9]$" },
+        "affected_h3": { "type": "array", "items": { "type": "string" } },
+        "demand_multiplier": { "type": "number", "minimum": 0.5, "maximum": 5 },
+        "travel_penalty": { "type": "number", "minimum": 1, "maximum": 10 },
+        "blocked_edges": { "type": "array", "items": { "type": "integer" } },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "const": "simulated" }
+      }
+    },
+    "SimulationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scenario_id", "fleet_size", "seed"],
+      "properties": {
+        "scenario_id": { "anyOf": [{ "type": "string" }, { "type": "null" }] },
+        "fleet_size": { "type": "integer", "minimum": 1 },
+        "seed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "AmbulanceSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "node_id", "target_node_id", "call_id"],
+      "properties": {
+        "id": { "type": "string" },
+        "status": { "$ref": "#/$defs/AmbulanceStatus" },
+        "node_id": { "type": "integer" },
+        "target_node_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }] },
+        "call_id": { "anyOf": [{ "type": "string" }, { "type": "null" }] }
+      }
+    },
+    "CallSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "h3_cell", "node_id", "priority", "status", "occurred_at_minute", "response_seconds"],
+      "properties": {
+        "id": { "type": "string" },
+        "h3_cell": { "type": "string" },
+        "node_id": { "type": "integer" },
+        "priority": { "type": "string" },
+        "status": { "$ref": "#/$defs/CallStatus" },
+        "occurred_at_minute": { "type": "integer", "minimum": 0 },
+        "response_seconds": { "anyOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }] }
+      }
+    },
+    "SimulationMetrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["policy", "mean_seconds", "p50_seconds", "p90_seconds", "p95_seconds", "within_8m_pct", "within_12m_pct", "within_20m_pct", "worst_district_p90_seconds", "queued_calls", "unserved_calls", "reposition_km"],
+      "properties": {
+        "policy": { "$ref": "#/$defs/Policy" },
+        "mean_seconds": { "type": "number", "minimum": 0 },
+        "p50_seconds": { "type": "number", "minimum": 0 },
+        "p90_seconds": { "type": "number", "minimum": 0 },
+        "p95_seconds": { "type": "number", "minimum": 0 },
+        "within_8m_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "within_12m_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "within_20m_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+        "worst_district_p90_seconds": { "type": "number", "minimum": 0 },
+        "queued_calls": { "type": "integer", "minimum": 0 },
+        "unserved_calls": { "type": "integer", "minimum": 0 },
+        "reposition_km": { "type": "number", "minimum": 0 }
+      }
+    },
+    "SimulationFrame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minute", "policy", "ambulances", "calls", "metrics", "active_scenario_ids"],
+      "properties": {
+        "minute": { "type": "integer", "minimum": 0, "maximum": 360 },
+        "policy": { "$ref": "#/$defs/Policy" },
+        "ambulances": { "type": "array", "items": { "$ref": "#/$defs/AmbulanceSnapshot" } },
+        "calls": { "type": "array", "items": { "$ref": "#/$defs/CallSnapshot" } },
+        "metrics": { "$ref": "#/$defs/SimulationMetrics" },
+        "active_scenario_ids": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "RoadNode": {
+      "type": "object", "additionalProperties": false,
+      "required": ["node_id", "x", "y", "h3_cell"],
+      "properties": { "node_id": { "type": "integer" }, "x": { "type": "number" }, "y": { "type": "number" }, "h3_cell": { "type": "string" } }
+    },
+    "RoadEdge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["edge_id", "u", "v", "length_m", "free_flow_seconds", "capacity_vph", "geometry_wkb"],
+      "properties": { "edge_id": { "type": "integer" }, "u": { "type": "integer" }, "v": { "type": "integer" }, "length_m": { "type": "number" }, "free_flow_seconds": { "type": "number" }, "capacity_vph": { "type": "number" }, "geometry_wkb": { "type": "string" } }
+    },
+    "CameraSite": {
+      "type": "object", "additionalProperties": false,
+      "required": ["camera_id", "edge_id", "x", "y", "confidence"],
+      "properties": { "camera_id": { "type": "string" }, "edge_id": { "type": "integer" }, "x": { "type": "number" }, "y": { "type": "number" }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 } }
+    },
+    "EdgeState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["edge_id", "bucket_start", "flow_vph", "speed_kph", "travel_seconds", "occupancy_people", "confidence"],
+      "properties": { "edge_id": { "type": "integer" }, "bucket_start": { "type": "string" }, "flow_vph": { "type": "number", "minimum": 0 }, "speed_kph": { "type": "number", "minimum": 0 }, "travel_seconds": { "type": "number", "minimum": 0 }, "occupancy_people": { "type": "number", "minimum": 0 }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 } }
+    },
+    "H3Density": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cell", "bucket_start", "density_people_km2", "emergency_intensity_hour", "confidence"],
+      "properties": { "cell": { "type": "string" }, "bucket_start": { "type": "string" }, "density_people_km2": { "type": "number", "minimum": 0 }, "emergency_intensity_hour": { "type": "number", "minimum": 0 }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 } }
+    },
+    "BootstrapResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "city", "bounds", "scenarios", "layer_urls", "default_seed", "default_fleet_size", "duration_minutes", "frame_interval_minutes", "nodes", "edges", "cameras", "edge_states", "h3_density"],
+      "properties": {
+        "schema_version": { "type": "string" }, "city": { "type": "string" },
+        "bounds": { "type": "array", "prefixItems": [{ "type": "number" }, { "type": "number" }, { "type": "number" }, { "type": "number" }], "minItems": 4, "maxItems": 4 },
+        "scenarios": { "type": "array", "items": { "$ref": "#/$defs/ScenarioObservation" } },
+        "layer_urls": { "type": "object", "additionalProperties": false, "required": ["map_style", "pmtiles"], "properties": { "map_style": { "type": "string" }, "pmtiles": { "type": "string" } } },
+        "default_seed": { "type": "integer", "minimum": 0 }, "default_fleet_size": { "type": "integer", "minimum": 1 },
+        "duration_minutes": { "type": "integer", "const": 360 }, "frame_interval_minutes": { "type": "integer", "const": 5 },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/RoadNode" } }, "edges": { "type": "array", "items": { "$ref": "#/$defs/RoadEdge" } },
+        "cameras": { "type": "array", "items": { "$ref": "#/$defs/CameraSite" } }, "edge_states": { "type": "array", "items": { "$ref": "#/$defs/EdgeState" } }, "h3_density": { "type": "array", "items": { "$ref": "#/$defs/H3Density" } }
+      }
+    },
+    "SimulationCreated": {
+      "type": "object", "additionalProperties": false, "required": ["id", "status"],
+      "properties": { "id": { "type": "string" }, "status": { "$ref": "#/$defs/SimulationJobStatus" } }
+    },
+    "PolicyMetrics": {
+      "type": "object", "additionalProperties": false, "required": ["baseline", "optimized"],
+      "properties": { "baseline": { "$ref": "#/$defs/SimulationMetrics" }, "optimized": { "$ref": "#/$defs/SimulationMetrics" } }
+    },
+    "SimulationStatusResponse": {
+      "type": "object", "additionalProperties": false, "required": ["id", "status", "request", "metrics", "error"],
+      "properties": { "id": { "type": "string" }, "status": { "$ref": "#/$defs/SimulationJobStatus" }, "request": { "$ref": "#/$defs/SimulationRequest" }, "metrics": { "anyOf": [{ "$ref": "#/$defs/PolicyMetrics" }, { "type": "null" }] }, "error": { "anyOf": [{ "type": "string" }, { "type": "null" }] } }
+    }
+  }
+}

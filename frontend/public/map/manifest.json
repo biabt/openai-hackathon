@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "artifact": "sao-paulo.pmtiles",
+  "source": "https://build.protomaps.com/20260819.pmtiles",
+  "source_data": "OpenStreetMap and Natural Earth via Protomaps Basemap",
+  "source_date": "2026-08-19",
+  "bounds": [-46.826, -24.008, -46.365, -23.357],
+  "minzoom": 0,
+  "maxzoom": 14,
+  "tile_type": "mvt",
+  "compression": "gzip",
+  "size_bytes": 25678773,
+  "sha256": "1cb0ebe16f87e02ba783bd668a51ad43bd79d06b6a486dc51dbbb7c3dbb8021d",
+  "license": "OpenStreetMap contributors; see https://www.openstreetmap.org/copyright",
+  "purpose": "Offline portal fallback until Developer A publishes a basemap built from the pinned road-graph extract."
+}

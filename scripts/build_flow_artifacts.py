@@ -271,7 +271,7 @@ def build_flow_artifacts(
             )
             edge_states.append(
                 {
-                    "edge_id": edge_id,
+                    "edge_id": int(edge_id),
                     "bucket_start": bucket,
                     "flow_vph": float(flow[index]),
                     "speed_kph": speed,
@@ -300,7 +300,7 @@ def build_flow_artifacts(
         edge_states,
         pa.schema(
             [
-                ("edge_id", pa.string()),
+                ("edge_id", pa.int64()),
                 ("bucket_start", pa.timestamp("us", tz="UTC")),
                 ("flow_vph", pa.float64()),
                 ("speed_kph", pa.float64()),

@@ -1,14 +1,14 @@
 {
   "artifacts": [
     {
-      "bytes": 1265,
-      "path": "map/README.md",
-      "sha256": "197e31a043b41df9308a5a26e0c6cdf2c64b58e3ba861d4608f4243d6a84cd69"
-    },
-    {
       "bytes": 795,
       "path": "map/metadata.json",
       "sha256": "42dd6516135d0a5fe6658f08638c71f7ef5415adc7fe6c294539add1b16a9469"
+    },
+    {
+      "bytes": 1265,
+      "path": "map/README.md",
+      "sha256": "197e31a043b41df9308a5a26e0c6cdf2c64b58e3ba861d4608f4243d6a84cd69"
     },
     {
       "bytes": 19083609,
@@ -21,11 +21,6 @@
       "sha256": "fd5eec6cd5b40e3945b061d44707f3365cf10d9ff4994f5c2288df0c63ccbde3"
     },
     {
-      "bytes": 1869,
-      "path": "mobility/README.md",
-      "sha256": "d90c4e4d575d3153fda5960890e7a65e85900c6d7403f5b439c4ee5578c77d8b"
-    },
-    {
       "bytes": 2501,
       "path": "mobility/artesp_sp280_km14_2025-01-01_07.csv",
       "sha256": "680bbe0e0979ff3a7c7a6c9a9aa8e4259d339c2739a689bcd00143d7885b1eed"
@@ -36,9 +31,9 @@
       "sha256": "e9279678ca90ab7c347e6df08a37aa79e5fafcf4ede3af84596c2ab396f57d36"
     },
     {
-      "bytes": 1385,
-      "path": "spatial/README.md",
-      "sha256": "33d4a55ca5321f09c19d5d04148ad84eb99a68fd51754909132ce799a3c00308"
+      "bytes": 1869,
+      "path": "mobility/README.md",
+      "sha256": "d90c4e4d575d3153fda5960890e7a65e85900c6d7403f5b439c4ee5578c77d8b"
     },
     {
       "bytes": 64848,
@@ -64,6 +59,11 @@
       "bytes": 136228,
       "path": "spatial/artifacts/nodes.parquet",
       "sha256": "8b5eb43a5aa2f8f6f2a2a0536bc7df89f57ac2fb43835dc2406ceb01a3ab7d65"
+    },
+    {
+      "bytes": 1385,
+      "path": "spatial/README.md",
+      "sha256": "33d4a55ca5321f09c19d5d04148ad84eb99a68fd51754909132ce799a3c00308"
     },
     {
       "bytes": 1670,
