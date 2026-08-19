@@ -1,0 +1,41 @@
+{
+  "description": "Deterministic synthetic centroids for aggregate-counter validation; not model output or real camera data.",
+  "frames": [
+    {
+      "offset_seconds": 0.0,
+      "detections": [
+        {"object_class": "car", "confidence": 0.9, "bbox_xyxy": [10, 35, 20, 45]},
+        {"object_class": "person", "confidence": 0.6, "bbox_xyxy": [30, 55, 40, 65]},
+        {"object_class": "bicycle", "confidence": 0.9, "bbox_xyxy": [50, 46, 60, 50]},
+        {"object_class": "truck", "confidence": 0.8, "bbox_xyxy": [70, 35, 80, 45]}
+      ]
+    },
+    {
+      "offset_seconds": 0.5,
+      "detections": [
+        {"object_class": "car", "confidence": 0.8, "bbox_xyxy": [10, 44, 20, 54]},
+        {"object_class": "person", "confidence": 0.8, "bbox_xyxy": [30, 46, 40, 56]},
+        {"object_class": "bicycle", "confidence": 0.8, "bbox_xyxy": [50, 48, 60, 52]}
+      ]
+    },
+    {
+      "offset_seconds": 1.0,
+      "detections": [
+        {"object_class": "car", "confidence": 0.7, "bbox_xyxy": [10, 55, 20, 65]},
+        {"object_class": "person", "confidence": 0.7, "bbox_xyxy": [30, 35, 40, 45]},
+        {"object_class": "bicycle", "confidence": 0.7, "bbox_xyxy": [50, 47, 60, 51]}
+      ]
+    },
+    {
+      "offset_seconds": 3.0,
+      "detections": [
+        {"object_class": "truck", "confidence": 0.9, "bbox_xyxy": [70, 55, 80, 65]}
+      ]
+    }
+  ],
+  "manual_counts": [
+    {"object_class": "car", "direction": "a_to_b", "count": 1},
+    {"object_class": "person", "direction": "b_to_a", "count": 1}
+  ],
+  "mvp_absolute_count_tolerance": 0
+}

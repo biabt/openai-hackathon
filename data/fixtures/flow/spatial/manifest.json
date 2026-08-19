@@ -1,0 +1,39 @@
+{
+  "artifacts": [
+    {
+      "media_type": "application/vnd.apache.parquet",
+      "path": "edge_h3_weights.parquet",
+      "rows": 8,
+      "sha256": "c35fb1bba6573aa203cb2c2063da04c73696da5046d0e5f53d51914fd83dacde"
+    },
+    {
+      "media_type": "application/vnd.apache.parquet",
+      "path": "edges.parquet",
+      "rows": 6,
+      "sha256": "d57dcd667de7a91c864fb271b16804262b2802b7c3b59758df673a8f8bb58b72"
+    },
+    {
+      "media_type": "application/geo+json",
+      "path": "h3_cells.geojson",
+      "rows": 2,
+      "sha256": "3105e5ab5db78ad700473fa8842835523c9cf9e0e77101f2e4f90d53885f72b3"
+    },
+    {
+      "media_type": "application/vnd.apache.parquet",
+      "path": "nodes.parquet",
+      "rows": 4,
+      "sha256": "f549db26f21959b58788ed9ee0941fb5c5fffb0c2a0685b9ea4fb3fa737f0c36"
+    }
+  ],
+  "bounds": [
+    -46.65253321562345,
+    -23.56624141233745,
+    -46.629938463803484,
+    -23.5483151018794
+  ],
+  "crs": "EPSG:4326",
+  "license": "Repository fixture; not an OpenStreetMap extract",
+  "schema_version": "1.0.0",
+  "source": "repository-authored two-district topology",
+  "source_date": "2026-08-19"
+}

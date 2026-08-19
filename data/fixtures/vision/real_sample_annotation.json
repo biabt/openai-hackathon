@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "sample_id": "wikimedia-sao-paulo-asphalt-2023-240p",
+  "title": "São Paulo - Máquina cortando asfalto.webm",
+  "description": "Short street-work video in São Paulo used only for a manual aggregate crossing sanity check.",
+  "source_page_url": "https://commons.wikimedia.org/wiki/File:S%C3%A3o_Paulo_-_M%C3%A1quina_cortando_asfalto.webm",
+  "source_media_url": "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/26/S%C3%A3o_Paulo_-_M%C3%A1quina_cortando_asfalto.webm/S%C3%A3o_Paulo_-_M%C3%A1quina_cortando_asfalto.webm.240p.vp9.webm",
+  "retrieval_date": "2026-08-19",
+  "source_date": "2023-07-05",
+  "author": "Sintegrity",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "terms_note": "The copyright holder published the source under CC BY-SA 4.0. This repository retains attribution and only a factual aggregate annotation; the video itself is not redistributed.",
+  "camera_location": {
+    "municipality": "São Paulo",
+    "detail": "Exact recording location is not specified on the source page."
+  },
+  "source_media": {
+    "variant": "240p VP9 Wikimedia transcode",
+    "duration_seconds": 9.166,
+    "width": 136,
+    "height": 240,
+    "sha256": "b34414eeed2a9e80b7db89a86a6818094bbec4f0a8ce79b12beb9d3960596b99",
+    "persisted_in_repository": false
+  },
+  "manual_annotation": {
+    "line": {
+      "a": [40, 55],
+      "b": [40, 105]
+    },
+    "roi": [[0, 45], [80, 45], [80, 115], [0, 115]],
+    "direction_definition": "right_to_left crosses from frame x > 40 to frame x < 40",
+    "counts": [
+      {
+        "object_class": "car",
+        "direction": "right_to_left",
+        "count": 2
+      }
+    ],
+    "mvp_absolute_count_tolerance": 1,
+    "review_note": "Low-resolution handheld footage with partial excavator occlusion; the annotation is a pipeline sanity check, not a camera-counter accuracy claim."
+  },
+  "privacy": "No source frames, crops, faces, plates, bounding boxes, or track identifiers are stored."
+}

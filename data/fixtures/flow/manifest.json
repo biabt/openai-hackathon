@@ -1,0 +1,68 @@
+{
+  "artifacts": [
+    {
+      "path": "camera_observations.parquet",
+      "rows": 3,
+      "sha256": "9a01fa3331be7518fe87110754cfb95ebca73e955b8603f9c6f3fafd46fd06c0"
+    },
+    {
+      "path": "derived/edge_state.parquet",
+      "rows": 12,
+      "sha256": "006a556333645da380ac93950bf2a6dbd8e87ea6d446f1bdcfdf62060f0a6845"
+    },
+    {
+      "path": "derived/h3_density.parquet",
+      "rows": 4,
+      "sha256": "84e3a793990dbe27932649d060836d0c2f8c8075217de78e3fc79c016354b292"
+    },
+    {
+      "path": "derived/manifest.json",
+      "rows": 0,
+      "sha256": "b64632a7ba5b4403279dc4ebdd7d3b7afaff52460230521172cd96d9953603ab"
+    },
+    {
+      "path": "spatial/edge_h3_weights.parquet",
+      "rows": 8,
+      "sha256": "c35fb1bba6573aa203cb2c2063da04c73696da5046d0e5f53d51914fd83dacde"
+    },
+    {
+      "path": "spatial/edges.parquet",
+      "rows": 6,
+      "sha256": "d57dcd667de7a91c864fb271b16804262b2802b7c3b59758df673a8f8bb58b72"
+    },
+    {
+      "path": "spatial/h3_cells.geojson",
+      "rows": 2,
+      "sha256": "3105e5ab5db78ad700473fa8842835523c9cf9e0e77101f2e4f90d53885f72b3"
+    },
+    {
+      "path": "spatial/manifest.json",
+      "rows": 0,
+      "sha256": "91c32bfc6791eda38c60fdcbe7a2d71f092e974f45ef43b733f2f2d29bbeac7d"
+    },
+    {
+      "path": "spatial/nodes.parquet",
+      "rows": 4,
+      "sha256": "f549db26f21959b58788ed9ee0941fb5c5fffb0c2a0685b9ea4fb3fa737f0c36"
+    }
+  ],
+  "build_command": "python3 scripts/build_flow_fixture.py --output data/fixtures/flow",
+  "component_manifests": {
+    "flow": "derived/manifest.json",
+    "spatial": "spatial/manifest.json"
+  },
+  "directed_observation": {
+    "direction": "a_to_b",
+    "observed_edge_id": "edge-8f97df05846694ae1c37",
+    "reverse_edge_id": "edge-70bc13c13d11b00b3f9b"
+  },
+  "district_cells": {
+    "east": "88a8100c03fffff",
+    "west": "88a8100c57fffff"
+  },
+  "fixture_id": "two-district-directed-flow-v1",
+  "fixture_type": "synthetic_acceptance_fixture",
+  "privacy": "Aggregate object counts only; no frames or persistent track identifiers.",
+  "production_artifacts": false,
+  "schema_version": "1.0.0"
+}

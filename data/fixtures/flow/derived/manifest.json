@@ -1,0 +1,38 @@
+{
+  "artifacts": {
+    "edge_state": {
+      "path": "edge_state.parquet",
+      "rows": 12,
+      "sha256": "006a556333645da380ac93950bf2a6dbd8e87ea6d446f1bdcfdf62060f0a6845"
+    },
+    "h3_density": {
+      "path": "h3_density.parquet",
+      "rows": 4,
+      "sha256": "84e3a793990dbe27932649d060836d0c2f8c8075217de78e3fc79c016354b292"
+    }
+  },
+  "estimator_parameters": {
+    "lambda_conservation": 0.5,
+    "lambda_spatial": 0.25,
+    "lambda_temporal": 1.0
+  },
+  "occupancy_priors": {
+    "bicycle": 1.0,
+    "bus": 25.0,
+    "car": 1.5,
+    "default": 1.5,
+    "motorcycle": 1.0,
+    "truck": 1.2
+  },
+  "schema_version": "1.0.0",
+  "sources": {
+    "observations": {
+      "path": "../camera_observations.parquet",
+      "sha256": "9a01fa3331be7518fe87110754cfb95ebca73e955b8603f9c6f3fafd46fd06c0"
+    },
+    "spatial_manifest": {
+      "path": "../spatial/manifest.json",
+      "sha256": "91c32bfc6791eda38c60fdcbe7a2d71f092e974f45ef43b733f2f2d29bbeac7d"
+    }
+  }
+}

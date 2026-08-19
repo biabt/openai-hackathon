@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "fixture_id": "synthetic-directional-crossings-v1",
+  "fixture_type": "synthetic_cached_detections",
+  "source_url": null,
+  "retrieval_date": null,
+  "created_in_repository_date": "2026-08-19",
+  "license": null,
+  "terms_note": "Original synthetic validation data created in this repository. It is not derived from third-party footage; repository project terms apply.",
+  "camera_location": {
+    "label": "Synthetic coordinate plane; not a physical camera",
+    "municipality_context": "São Paulo MVP configuration validation only",
+    "latitude": null,
+    "longitude": null
+  },
+  "sha256": "4023bd39e73fed7bb0de7e617844c37892bb0a783fd504eedc638148b5ba98dd",
+  "sha256_file": "synthetic_detections.json",
+  "authorization": "Repository-authored synthetic fixture authorized for automated tests and demo validation.",
+  "privacy": "Contains numeric bounding boxes and aggregate ground truth only. Contains no images, people, faces, credentials, persistent identities, or real camera observations.",
+  "limitations": [
+    "This fixture does not measure detector accuracy, real-world occlusion, lighting, camera shake, or São Paulo traffic conditions.",
+    "It validates deterministic tracking expiration, line-crossing direction, hysteresis, bucketing, and aggregate schema only.",
+    "The real validation annotation is manual and is not a detector-accuracy benchmark."
+  ],
+  "authorized_real_sample": {
+    "annotation_file": "real_sample_annotation.json",
+    "media_persisted": false,
+    "privacy_reason": "Only aggregate manual counts and source provenance are retained; the source video is not bundled."
+  }
+}
