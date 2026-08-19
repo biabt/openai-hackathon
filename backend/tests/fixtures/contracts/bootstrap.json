@@ -1,0 +1,54 @@
+{
+  "api_version": "1.0",
+  "city": "São Paulo",
+  "default_seed": 42,
+  "fleet_size_bounds": {
+    "default": 3,
+    "maximum": 120,
+    "minimum": 1
+  },
+  "forecast_horizon_minutes": 60,
+  "frame_interval_minutes": 5,
+  "h3_resolution": 8,
+  "layer_urls": {
+    "camera_locations": "/api/layers/camera-locations",
+    "edge_flow": "/api/layers/edge-flow",
+    "h3_density": "/api/layers/h3-density",
+    "roads": "/assets/map/sao-paulo.pmtiles"
+  },
+  "optimization_cadence_minutes": 15,
+  "scenarios": [
+    {
+      "affected_h3": [
+        "88a8100c05fffff"
+      ],
+      "blocked_edges": [
+        12345,
+        12346
+      ],
+      "confidence": 0.9,
+      "demand_multiplier": 1.25,
+      "ends_at": "19:00",
+      "id": "flood-aricanduva-1730",
+      "source": "simulated",
+      "starts_at": "17:30",
+      "travel_penalty": 2.0,
+      "type": "flood"
+    },
+    {
+      "affected_h3": [
+        "88a8100c05fffff"
+      ],
+      "blocked_edges": [],
+      "confidence": 0.9,
+      "demand_multiplier": 1.5,
+      "ends_at": "21:00",
+      "id": "event-allianz-1800",
+      "source": "simulated",
+      "starts_at": "18:00",
+      "travel_penalty": 1.25,
+      "type": "event"
+    }
+  ],
+  "simulation_duration_minutes": 360
+}
