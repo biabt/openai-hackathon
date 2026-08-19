@@ -60,34 +60,37 @@ CityOS therefore asks:
 
 Let:
 
-$$
+```math
 \mathcal{H}=\{h_1,h_2,\ldots,h_n\}
-$$
+```
 
 be the set of city regions and:
 
-$$
-\mathcal{M}=\{\text{metro},\text{bus},\text{car},\text{walk},\text{bike}\}
-$$
+```math
+\mathcal{M}=\{m_1,m_2,m_3,m_4,m_5\}
+```
 
-the available mobility modes.
+the available mobility modes: metro, bus, car, walking, and cycling.
 
 ## 2. Model flow between regions
 
 For each pair of regions, mode, and five-minute interval, CityOS estimates:
 
-$$
+```math
 F_{ij}^{(m)}(t)
-=
-\text{people moving from region }h_i\text{ to }h_j
-\text{ using mode }m
-$$
+```
+
+- $i$: origin region.
+- $j$: destination region.
+- $m$: mobility mode.
+- $t$: five-minute time bucket.
+- $F$: estimated people moving from $i$ to $j$ using $m$ at $t$.
 
 The combined regional flow is:
 
-$$
+```math
 F_{ij}(t)=\sum_{m\in\mathcal{M}}\omega_m F_{ij}^{(m)}(t)
-$$
+```
 
 where $\omega_m$ converts each mode into a comparable people-flow estimate.
 
@@ -111,14 +114,15 @@ where $\omega_m$ converts each mode into a comparable people-flow estimate.
 
 Sensors do not cover every road or every time bucket. CityOS estimates the missing directional flows with:
 
-$$
-\hat f_t=
-\arg\min_{f\ge 0}
-\underbrace{\|W_t(H_tf-y_t)\|_2^2}_{\text{fit observed counts}}
-+\lambda_s\underbrace{f^\top L_Ef}_{\text{nearby roads behave coherently}}
-+\lambda_t\underbrace{\|f-f_{t-1}\|_2^2}_{\text{temporal continuity}}
-+\lambda_c\underbrace{\|Bf-b_t\|_2^2}_{\text{flow conservation}}
-$$
+```math
+\hat f_t=\arg\min_{f\ge 0}
+\left[
+\|W_t(H_tf-y_t)\|_2^2
++\lambda_s f^\top L_Ef
++\lambda_t\|f-f_{t-1}\|_2^2
++\lambda_c\|Bf-b_t\|_2^2
+\right]
+```
 
 - $y_t$: observed counts.
 - $H_t$: mapping from sensors to directed edges.
@@ -141,9 +145,9 @@ Flow says who is moving. City operations also need an estimate of **who is prese
 
 For a road edge $e$:
 
-$$
+```math
 N_e(t)=f_e(t)\cdot\tau_e(t)\cdot\kappa_e
-$$
+```
 
 - $f_e(t)$: vehicles or people per hour.
 - $\tau_e(t)$: time spent on the edge.
@@ -151,10 +155,10 @@ $$
 
 Congested travel time uses the BPR function:
 
-$$
+```math
 \tau_e(t)=\tau_e^0
 \left[1+0.15\left(\frac{f_e(t)}{c_e}\right)^4\right]
-$$
+```
 
 - $\tau_e^0$: free-flow travel time.
 - $c_e$: approximate edge capacity.
@@ -162,11 +166,11 @@ $$
 
 Edge occupancy is allocated to H3 regions:
 
-$$
+```math
 \rho_h(t)=
 \frac{1}{A_h}
 \sum_e \omega_{he}N_e(t)
-$$
+```
 
 - $\omega_{he}$: proportion of edge $e$ assigned to cell $h$.
 - $A_h$: area of cell $h$.
@@ -186,7 +190,7 @@ Presence alone is not need. CityOS combines activity with context:
 
 For a municipal need type $k$ in region $h$:
 
-$$
+```math
 \lambda_h^{(k)}(t)=
 \exp\left(
 \beta_0^{(k)}
@@ -195,7 +199,7 @@ $$
 +s^{(k)}(t)
 +\sum_r\gamma_r^{(k)}K_r(h,t)
 \right)
-$$
+```
 
 - $z_{h,t}$: flow, density, accessibility, and contextual features.
 - $u_h$: persistent regional effect.
@@ -205,12 +209,9 @@ $$
 
 For the ambulance application:
 
-$$
-N_{h,t}^{\text{calls}}
-\sim
-\operatorname{Poisson}
-\left(\lambda_h^{\text{ambulance}}(t)\Delta t\right)
-$$
+```math
+N_{h,t}^{call}\sim Pois\left(\lambda_h^{amb}(t)\Delta t\right)
+```
 
 - Calls are synthetic and seeded.
 - The same immutable call tape is used for every policy.
@@ -220,23 +221,25 @@ $$
 
 CityOS turns predicted need into an operational placement problem:
 
-$$
+```math
 \min_x
-\quad
-\operatorname{CVaR}_{0.90}(T(x))
+\left[
+C_{0.90}(T(x))
 +\lambda_R R(x,x_{prev})
 +\lambda_E E(x)
-$$
+\right]
+```
 
 subject to:
 
-$$
+```math
 \sum_i x_i=p,
 \qquad
 x_i\in\mathbb{Z}_{\ge0}
-$$
+```
 
 - $T(x)$: response-time distribution under placement $x$.
+- $C_{0.90}$: CVaR90 tail-risk score.
 - $R(x,x_{prev})$: cost of moving resources.
 - $E(x)$: penalty for poor geographic equity.
 - $p$: available fleet or resource count.
