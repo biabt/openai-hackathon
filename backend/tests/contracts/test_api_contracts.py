@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import inf, nan
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import ValidationError
 
 from city_os.contracts.api import (
@@ -106,6 +107,40 @@ def valid_frame(**overrides: object) -> dict[str, object]:
     }
     value.update(overrides)
     return value
+
+
+def valid_bootstrap(**overrides: object) -> dict[str, object]:
+    value: dict[str, object] = {
+        "api_version": "1.0",
+        "city": "São Paulo",
+        "h3_resolution": 8,
+        "simulation_duration_minutes": 360,
+        "frame_interval_minutes": 5,
+        "optimization_cadence_minutes": 15,
+        "forecast_horizon_minutes": 60,
+        "default_seed": 0,
+        "fleet_size_bounds": {"minimum": 1, "maximum": 120, "default": 1},
+        "scenarios": [valid_scenario()],
+        "layer_urls": {"roads": "/layers/roads.geojson"},
+    }
+    value.update(overrides)
+    return value
+
+
+def valid_paired_metrics() -> PairedMetrics:
+    return PairedMetrics(
+        baseline=SimulationMetrics.model_validate(valid_metrics()),
+        optimized=SimulationMetrics.model_validate(valid_metrics(policy="optimized")),
+    )
+
+
+def valid_methodology() -> MethodologyMetadata:
+    return MethodologyMetadata(
+        call_tape_seed=0,
+        calibration_target_seconds=1260,
+        calibration_description="Calibrated simulation",
+        data_label="simulated",
+    )
 
 
 @pytest.mark.parametrize(
@@ -281,6 +316,37 @@ def test_frame_enforces_schedule_policy_and_identifier_invariants(
         SimulationFrame.model_validate(valid_frame(**overrides))
 
 
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {
+            "ambulances": [
+                valid_ambulance(id="amb-1", node_id=1),
+                valid_ambulance(id="amb-1", node_id=2),
+            ]
+        },
+        {
+            "calls": [
+                valid_call(id="call-1", node_id=1),
+                valid_call(id="call-1", node_id=2),
+            ]
+        },
+    ],
+)
+def test_frame_rejects_duplicate_snapshot_ids(overrides: dict[str, object]) -> None:
+    """Duplicate entity IDs make a frame ambiguous to keyed frontend state."""
+    with pytest.raises(ValidationError):
+        SimulationFrame.model_validate(valid_frame(**overrides))
+
+
+def test_bootstrap_rejects_duplicate_scenario_ids() -> None:
+    """Scenario IDs are stable control identifiers and must not collide."""
+    scenarios = [valid_scenario(id="scenario-1"), valid_scenario(id="scenario-1")]
+
+    with pytest.raises(ValidationError):
+        BootstrapResponse.model_validate(valid_bootstrap(scenarios=scenarios))
+
+
 def test_parse_response_requires_error_exactly_for_fallback() -> None:
     """Clients need an error whenever the parsing result is a fallback, and never otherwise."""
     observation = ScenarioObservation.model_validate(valid_scenario())
@@ -296,19 +362,58 @@ def test_parse_response_requires_error_exactly_for_fallback() -> None:
         ScenarioParseResponse(observation=observation, used_fallback=False, error=error)
 
 
+def test_parse_response_schema_exposes_the_runtime_fallback_condition() -> None:
+    """Schema-only clients must see the same fallback/error branches as Pydantic."""
+    schema = ScenarioParseResponse.model_json_schema()
+
+    assert schema["allOf"] == [
+        {
+            "if": {
+                "properties": {"used_fallback": {"const": True}},
+                "required": ["used_fallback"],
+            },
+            "then": {"properties": {"error": {"not": {"type": "null"}}}},
+            "else": {"properties": {"error": {"type": "null"}}},
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    ("used_fallback", "error", "is_valid"),
+    [
+        (False, None, True),
+        (True, "present", True),
+        (False, "present", False),
+        (True, None, False),
+    ],
+)
+def test_parse_response_schema_and_runtime_accept_the_same_branches(
+    used_fallback: bool, error: str | None, is_valid: bool
+) -> None:
+    """Draft 2020-12 validation must agree with runtime fallback validation."""
+    payload = {
+        "observation": valid_scenario(),
+        "used_fallback": used_fallback,
+        "error": {"code": "fallback", "message": "Unable to parse"} if error else None,
+    }
+    schema_accepts = Draft202012Validator(ScenarioParseResponse.model_json_schema()).is_valid(
+        payload
+    )
+    try:
+        ScenarioParseResponse.model_validate(payload)
+        runtime_accepts = True
+    except ValidationError:
+        runtime_accepts = False
+
+    assert schema_accepts is is_valid
+    assert runtime_accepts is is_valid
+
+
 def test_job_response_requires_completed_payloads_and_failed_error() -> None:
     """Polling clients can rely on terminal states to decide which payload to render."""
     request = SimulationRequest(scenario_id="scenario-1", fleet_size=1, seed=0)
-    paired = PairedMetrics(
-        baseline=SimulationMetrics.model_validate(valid_metrics()),
-        optimized=SimulationMetrics.model_validate(valid_metrics(policy="optimized")),
-    )
-    methodology = MethodologyMetadata(
-        call_tape_seed=0,
-        calibration_target_seconds=1260,
-        calibration_description="Calibrated simulation",
-        data_label="simulated",
-    )
+    paired = valid_paired_metrics()
+    methodology = valid_methodology()
     completed = SimulationJobResponse(
         simulation_id="sim-run_1",
         request=request,
@@ -348,21 +453,86 @@ def test_job_response_requires_completed_payloads_and_failed_error() -> None:
         )
 
 
+def test_job_response_schema_exposes_the_runtime_terminal_conditions() -> None:
+    """Schema-only clients must see completed, failed, and in-progress payload rules."""
+    schema = SimulationJobResponse.model_json_schema()
+
+    assert schema["allOf"] == [
+        {
+            "if": {
+                "properties": {"status": {"const": "completed"}},
+                "required": ["status"],
+            },
+            "then": {
+                "properties": {
+                    "metrics": {"not": {"type": "null"}},
+                    "methodology": {"not": {"type": "null"}},
+                }
+            },
+            "else": {
+                "properties": {
+                    "metrics": {"type": "null"},
+                    "methodology": {"type": "null"},
+                }
+            },
+        },
+        {
+            "if": {
+                "properties": {"status": {"const": "failed"}},
+                "required": ["status"],
+            },
+            "then": {"properties": {"error": {"not": {"type": "null"}}}},
+            "else": {"properties": {"error": {"type": "null"}}},
+        },
+    ]
+
+
+@pytest.mark.parametrize(
+    ("status", "metrics", "methodology", "error", "is_valid"),
+    [
+        ("queued", None, None, None, True),
+        ("running", None, None, None, True),
+        ("completed", "present", "present", None, True),
+        ("failed", None, None, "present", True),
+        ("completed", None, None, None, False),
+        ("failed", None, None, None, False),
+        ("queued", "present", "present", None, False),
+        ("running", None, None, "present", False),
+    ],
+)
+def test_job_response_runtime_acceptance_matches_schema_status_branches(
+    status: str,
+    metrics: str | None,
+    methodology: str | None,
+    error: str | None,
+    is_valid: bool,
+) -> None:
+    """Every schema status branch must agree with runtime payload validation."""
+    payload = {
+        "simulation_id": "sim-run_1",
+        "request": {"scenario_id": "scenario-1", "fleet_size": 120, "seed": 0},
+        "status": status,
+        "metrics": valid_paired_metrics().model_dump(mode="json") if metrics else None,
+        "methodology": valid_methodology().model_dump(mode="json") if methodology else None,
+        "error": {"code": "failed", "message": "Simulation failed"} if error else None,
+    }
+
+    schema_accepts = Draft202012Validator(SimulationJobResponse.model_json_schema()).is_valid(
+        payload
+    )
+    try:
+        SimulationJobResponse.model_validate(payload)
+        runtime_accepts = True
+    except ValidationError:
+        runtime_accepts = False
+
+    assert schema_accepts is is_valid
+    assert runtime_accepts is is_valid
+
+
 def test_bootstrap_and_created_wrappers_validate_their_fixed_surface() -> None:
     """Controls and creation polling depend on immutable bootstrap and queued shapes."""
-    bootstrap = BootstrapResponse(
-        api_version="1.0",
-        city="São Paulo",
-        h3_resolution=8,
-        simulation_duration_minutes=360,
-        frame_interval_minutes=5,
-        optimization_cadence_minutes=15,
-        forecast_horizon_minutes=60,
-        default_seed=0,
-        fleet_size_bounds=FleetSizeBounds(minimum=1, maximum=2, default=1),
-        scenarios=[ScenarioObservation.model_validate(valid_scenario())],
-        layer_urls={"roads": "/layers/roads.geojson"},
-    )
+    bootstrap = BootstrapResponse.model_validate(valid_bootstrap())
     created = SimulationCreatedResponse(simulation_id="sim-abc_1", status="queued")
 
     assert bootstrap.layer_urls["roads"] == "/layers/roads.geojson"

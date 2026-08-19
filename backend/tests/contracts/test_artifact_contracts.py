@@ -18,6 +18,7 @@ from city_os.contracts.artifacts import (
 
 H3_R8 = "8828308281fffff"
 BUCKET_START = datetime(2026, 8, 19, 12, 5, tzinfo=UTC)
+LINESTRING_WKB_BASE64 = "AQIAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPA/AAAAAAAA8D8="
 
 
 def node_payload(**changes: object) -> dict[str, object]:
@@ -39,7 +40,7 @@ def edge_payload(**changes: object) -> dict[str, object]:
         "length_m": 42.5,
         "free_flow_seconds": 5.0,
         "capacity_vph": 900.0,
-        "geometry_wkb": "AAE=",
+        "geometry_wkb": LINESTRING_WKB_BASE64,
     }
     payload.update(changes)
     return payload
@@ -104,7 +105,7 @@ def manifest_payload(**changes: object) -> dict[str, object]:
 def test_artifact_rows_accept_valid_frozen_contract_values() -> None:
     """Removing a frozen field or its valid domain must reject this fixture."""
     assert RoadNode.model_validate(node_payload()).h3_cell == H3_R8
-    assert RoadEdge.model_validate(edge_payload()).geometry_wkb == "AAE="
+    assert RoadEdge.model_validate(edge_payload()).geometry_wkb == LINESTRING_WKB_BASE64
     assert CameraObservation.model_validate(camera_payload()).bucket_start == BUCKET_START
     assert EdgeState.model_validate(edge_state_payload()).flow_vph == 120.0
     assert H3Density.model_validate(density_payload()).cell == H3_R8
@@ -228,11 +229,32 @@ def test_camera_strings_must_not_be_empty(field: str, value: str) -> None:
         CameraObservation.model_validate(camera_payload(**{field: value}))
 
 
-@pytest.mark.parametrize("geometry_wkb", ["", "not base64!", "AA=!"])
-def test_edge_geometry_requires_nonempty_decodable_base64(geometry_wkb: str) -> None:
-    """Removing base64 decoding lets malformed WKB reach spatial consumers."""
+@pytest.mark.parametrize("geometry_wkb", ["", "not base64!", "AA=!", "AAE="])
+def test_edge_geometry_requires_nonempty_decodable_wkb_base64(geometry_wkb: str) -> None:
+    """Removing WKB parsing lets malformed road geometry reach spatial consumers."""
     with pytest.raises(ValidationError):
         RoadEdge.model_validate(edge_payload(geometry_wkb=geometry_wkb))
+
+
+def test_artifact_json_schema_preserves_declarative_wire_constraints() -> None:
+    """Removing field annotations makes generated clients accept Python-rejected artifacts."""
+    road_node_schema = RoadNode.model_json_schema()
+    density_schema = H3Density.model_json_schema()
+    edge_schema = RoadEdge.model_json_schema()
+    camera_schema = CameraObservation.model_json_schema()
+    entry_schema = ArtifactEntry.model_json_schema()
+
+    assert road_node_schema["properties"]["h3_cell"]["pattern"] == r"^[0-9a-f]{15}$"
+    assert density_schema["properties"]["cell"]["pattern"] == r"^[0-9a-f]{15}$"
+    assert edge_schema["properties"]["geometry_wkb"]["minLength"] == 1
+    assert edge_schema["properties"]["geometry_wkb"]["contentEncoding"] == "base64"
+    for field in ("camera_id", "object_class", "direction"):
+        assert camera_schema["properties"][field]["minLength"] == 1
+    for field in ("name", "media_type"):
+        assert entry_schema["properties"][field]["minLength"] == 1
+    path_schema = entry_schema["properties"]["path"]
+    assert path_schema["minLength"] == 1
+    assert "pattern" in path_schema
 
 
 @pytest.mark.parametrize(

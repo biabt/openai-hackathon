@@ -84,12 +84,10 @@ def _schema_document() -> dict[str, Any]:
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "$id": "https://city-os.local/schema/city-os/v1",
         "title": "City OS C0 API Contract",
-        "type": "object",
-        "additionalProperties": False,
         "$defs": shared_schema["$defs"],
         "oneOf": [
-            {"$ref": "#/$defs/BootstrapResponse"},
-            {"$ref": "#/$defs/SimulationFrame"},
+            {"$ref": f"#/$defs/{model_name}"}
+            for model_name in sorted(model.__name__ for model in FROZEN_MODELS)
         ],
     }
 

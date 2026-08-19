@@ -285,6 +285,12 @@ class SimulationFrame(StrictModel):
     def _validate_policy_and_scenarios(self) -> Self:
         if self.metrics.policy is not self.policy:
             raise ValueError("metrics.policy must equal frame policy")
+        ambulance_ids = [ambulance.id for ambulance in self.ambulances]
+        if len(ambulance_ids) != len(set(ambulance_ids)):
+            raise ValueError("ambulances must have unique IDs")
+        call_ids = [call.id for call in self.calls]
+        if len(call_ids) != len(set(call_ids)):
+            raise ValueError("calls must have unique IDs")
         if len(self.active_scenario_ids) != len(set(self.active_scenario_ids)):
             raise ValueError("active_scenario_ids must contain unique values")
         return self
@@ -317,6 +323,13 @@ class BootstrapResponse(StrictModel):
     scenarios: Annotated[tuple[ScenarioObservation, ...], Field(strict=False)]
     layer_urls: Annotated[dict[NonEmptyString, LocalAssetUrl], Field(strict=False)]
 
+    @model_validator(mode="after")
+    def _validate_scenario_ids(self) -> Self:
+        scenario_ids = [scenario.id for scenario in self.scenarios]
+        if len(scenario_ids) != len(set(scenario_ids)):
+            raise ValueError("scenarios must have unique IDs")
+        return self
+
 
 class ScenarioParseRequest(StrictModel):
     text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4000)]
@@ -328,6 +341,21 @@ class ApiError(StrictModel):
 
 
 class ScenarioParseResponse(StrictModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {"used_fallback": {"const": True}},
+                        "required": ["used_fallback"],
+                    },
+                    "then": {"properties": {"error": {"not": {"type": "null"}}}},
+                    "else": {"properties": {"error": {"type": "null"}}},
+                }
+            ]
+        }
+    )
+
     observation: ScenarioObservation
     used_fallback: StrictBool
     error: ApiError | None
@@ -365,6 +393,39 @@ class MethodologyMetadata(StrictModel):
 
 
 class SimulationJobResponse(StrictModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "allOf": [
+                {
+                    "if": {
+                        "properties": {"status": {"const": "completed"}},
+                        "required": ["status"],
+                    },
+                    "then": {
+                        "properties": {
+                            "metrics": {"not": {"type": "null"}},
+                            "methodology": {"not": {"type": "null"}},
+                        }
+                    },
+                    "else": {
+                        "properties": {
+                            "metrics": {"type": "null"},
+                            "methodology": {"type": "null"},
+                        }
+                    },
+                },
+                {
+                    "if": {
+                        "properties": {"status": {"const": "failed"}},
+                        "required": ["status"],
+                    },
+                    "then": {"properties": {"error": {"not": {"type": "null"}}}},
+                    "else": {"properties": {"error": {"type": "null"}}},
+                },
+            ]
+        }
+    )
+
     simulation_id: SimulationId
     request: SimulationRequest
     status: WireSimulationJobStatus

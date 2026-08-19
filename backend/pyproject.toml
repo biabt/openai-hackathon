@@ -24,6 +24,7 @@ dependencies = [
 dev = [
     "hypothesis>=6.120,<7.0",
     "httpx>=0.28,<1.0",
+    "jsonschema>=4.23,<5.0",
     "mypy>=1.14,<2.0",
     "pytest>=8.3,<9.0",
     "ruff>=0.9,<1.0",

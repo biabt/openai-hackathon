@@ -115,14 +115,18 @@
           "$ref": "#/$defs/ArtifactChecksum"
         },
         "media_type": {
+          "minLength": 1,
           "title": "Media Type",
           "type": "string"
         },
         "name": {
+          "minLength": 1,
           "title": "Name",
           "type": "string"
         },
         "path": {
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*//).+$",
           "title": "Path",
           "type": "string"
         }
@@ -330,6 +334,7 @@
           "type": "string"
         },
         "camera_id": {
+          "minLength": 1,
           "title": "Camera Id",
           "type": "string"
         },
@@ -345,6 +350,7 @@
           "type": "integer"
         },
         "direction": {
+          "minLength": 1,
           "title": "Direction",
           "type": "string"
         },
@@ -354,6 +360,7 @@
           "type": "integer"
         },
         "object_class": {
+          "minLength": 1,
           "title": "Object Class",
           "type": "string"
         }
@@ -460,6 +467,7 @@
           "type": "string"
         },
         "cell": {
+          "pattern": "^[0-9a-f]{15}$",
           "title": "Cell",
           "type": "string"
         },
@@ -560,6 +568,8 @@
           "type": "number"
         },
         "geometry_wkb": {
+          "contentEncoding": "base64",
+          "minLength": 1,
           "title": "Geometry Wkb",
           "type": "string"
         },
@@ -596,6 +606,7 @@
       "description": "A directed-road-network node located in WGS84 coordinates.",
       "properties": {
         "h3_cell": {
+          "pattern": "^[0-9a-f]{15}$",
           "title": "H3 Cell",
           "type": "string"
         },
@@ -719,6 +730,36 @@
     },
     "ScenarioParseResponse": {
       "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "used_fallback": {
+                "const": true
+              }
+            },
+            "required": [
+              "used_fallback"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ],
       "properties": {
         "error": {
           "anyOf": [
@@ -836,6 +877,72 @@
     },
     "SimulationJobResponse": {
       "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "methodology": {
+                "type": "null"
+              },
+              "metrics": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "status": {
+                "const": "completed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "methodology": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "metrics": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        },
+        {
+          "else": {
+            "properties": {
+              "error": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "status": {
+                "const": "failed"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ],
       "properties": {
         "error": {
           "anyOf": [
@@ -1076,15 +1183,76 @@
   },
   "$id": "https://city-os.local/schema/city-os/v1",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "additionalProperties": false,
   "oneOf": [
+    {
+      "$ref": "#/$defs/AmbulanceSnapshot"
+    },
+    {
+      "$ref": "#/$defs/ApiError"
+    },
+    {
+      "$ref": "#/$defs/ArtifactChecksum"
+    },
+    {
+      "$ref": "#/$defs/ArtifactEntry"
+    },
+    {
+      "$ref": "#/$defs/ArtifactManifest"
+    },
     {
       "$ref": "#/$defs/BootstrapResponse"
     },
     {
+      "$ref": "#/$defs/CallSnapshot"
+    },
+    {
+      "$ref": "#/$defs/CameraObservation"
+    },
+    {
+      "$ref": "#/$defs/EdgeState"
+    },
+    {
+      "$ref": "#/$defs/FleetSizeBounds"
+    },
+    {
+      "$ref": "#/$defs/H3Density"
+    },
+    {
+      "$ref": "#/$defs/MethodologyMetadata"
+    },
+    {
+      "$ref": "#/$defs/PairedMetrics"
+    },
+    {
+      "$ref": "#/$defs/RoadEdge"
+    },
+    {
+      "$ref": "#/$defs/RoadNode"
+    },
+    {
+      "$ref": "#/$defs/ScenarioObservation"
+    },
+    {
+      "$ref": "#/$defs/ScenarioParseRequest"
+    },
+    {
+      "$ref": "#/$defs/ScenarioParseResponse"
+    },
+    {
+      "$ref": "#/$defs/SimulationCreatedResponse"
+    },
+    {
       "$ref": "#/$defs/SimulationFrame"
+    },
+    {
+      "$ref": "#/$defs/SimulationJobResponse"
+    },
+    {
+      "$ref": "#/$defs/SimulationMetrics"
+    },
+    {
+      "$ref": "#/$defs/SimulationRequest"
     }
   ],
-  "title": "City OS C0 API Contract",
-  "type": "object"
+  "title": "City OS C0 API Contract"
 }

@@ -6,7 +6,18 @@ from datetime import datetime
 from typing import Annotated, Literal
 
 import h3  # type: ignore[import-untyped]
-from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FiniteFloat,
+    StringConstraints,
+    WithJsonSchema,
+    field_validator,
+    model_validator,
+)
+from shapely import from_wkb  # type: ignore[import-untyped]
+from shapely.errors import GEOSException  # type: ignore[import-untyped]
 
 
 class StrictModel(BaseModel):
@@ -22,6 +33,26 @@ Confidence = Annotated[FiniteFloat, Field(ge=0, le=1)]
 Longitude = Annotated[FiniteFloat, Field(ge=-180, le=180)]
 Latitude = Annotated[FiniteFloat, Field(ge=-90, le=90)]
 Sha256Value = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
+H3Cell = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{15}$", strict=True)]
+NonEmptyText = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, strict=True)
+]
+RelativePosixPath = Annotated[
+    str,
+    StringConstraints(min_length=1, strict=True),
+    WithJsonSchema(
+        {
+            "type": "string",
+            "minLength": 1,
+            "pattern": r"^(?!/)(?!.*\\)(?!.*(?:^|/)(?:\.|\.\.)(?:/|$))(?!.*//).+$",
+        }
+    ),
+]
+Base64Wkb = Annotated[
+    str,
+    StringConstraints(min_length=1, strict=True),
+    WithJsonSchema({"type": "string", "minLength": 1, "contentEncoding": "base64"}),
+]
 
 
 def _validate_h3_resolution_eight(value: str) -> str:
@@ -50,7 +81,7 @@ class RoadNode(StrictModel):
     node_id: NonNegativeInt
     x: Longitude
     y: Latitude
-    h3_cell: str
+    h3_cell: H3Cell
 
     @field_validator("h3_cell")
     @classmethod
@@ -67,7 +98,7 @@ class RoadEdge(StrictModel):
     length_m: PositiveFiniteFloat
     free_flow_seconds: PositiveFiniteFloat
     capacity_vph: NonNegativeFiniteFloat
-    geometry_wkb: str
+    geometry_wkb: Base64Wkb
 
     @field_validator("geometry_wkb")
     @classmethod
@@ -75,20 +106,21 @@ class RoadEdge(StrictModel):
         if not value:
             raise ValueError("must not be empty")
         try:
-            base64.b64decode(value.encode("ascii"), validate=True)
-        except (UnicodeEncodeError, ValueError, binascii.Error) as error:
-            raise ValueError("must be valid base64 text") from error
+            geometry_wkb = base64.b64decode(value.encode("ascii"), validate=True)
+            from_wkb(geometry_wkb)
+        except (UnicodeEncodeError, ValueError, binascii.Error, GEOSException) as error:
+            raise ValueError("must be valid base64-encoded WKB") from error
         return value
 
 
 class CameraObservation(StrictModel):
     """An aggregated, privacy-safe camera count for one edge and time bucket."""
 
-    camera_id: str
+    camera_id: NonEmptyText
     edge_id: NonNegativeInt
     bucket_start: datetime
-    object_class: str
-    direction: str
+    object_class: NonEmptyText
+    direction: NonEmptyText
     count: NonNegativeInt
     confidence: Confidence
 
@@ -123,7 +155,7 @@ class EdgeState(StrictModel):
 class H3Density(StrictModel):
     """An H3-cell density estimate for a five-minute observation bucket."""
 
-    cell: str
+    cell: H3Cell
     bucket_start: datetime
     density_people_km2: NonNegativeFiniteFloat
     emergency_intensity_hour: NonNegativeFiniteFloat
@@ -150,9 +182,9 @@ class ArtifactChecksum(StrictModel):
 class ArtifactEntry(StrictModel):
     """A single local artifact listed in a versioned artifact manifest."""
 
-    name: str
-    path: str
-    media_type: str
+    name: NonEmptyText
+    path: RelativePosixPath
+    media_type: NonEmptyText
     checksum: ArtifactChecksum
 
     @field_validator("name", "media_type")
