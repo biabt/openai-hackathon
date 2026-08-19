@@ -97,6 +97,19 @@ make smoke
 
 The smoke test starts both services, waits for their health checks, runs seed `42`, verifies at least 72 five-minute frames for each policy, and terminates the child processes cleanly.
 
+### Optional SPTrans Olho Vivo check
+
+The minimal server-side SPTrans client reads its application key only from the environment,
+performs the required Olho Vivo handshake internally, and fetches citywide vehicle positions.
+Never commit the key or place it in command-line arguments.
+
+```bash
+export SPTRANS_API_KEY="<your Olho Vivo application key>"
+uv run --directory backend python ../scripts/check_sptrans.py
+```
+
+SPTrans is optional and is not contacted during the offline judged demo or automated tests.
+
 ## Five-minute hackathon walkthrough
 
 1. Open the São Paulo operations map and inspect roads, camera observations, inferred flow, and H3 activity density.
@@ -138,6 +151,7 @@ backend/
     vision/        local detection, transient tracking, line counting
     flow/          network inference, travel time, H3 density
     contracts/     shared API and artifact schemas
+    integrations/  optional authenticated external-source clients
     scenarios/     typed scenario observations and fallbacks
     demand/        deterministic emergency call tapes
     routing/       time-aware directed travel times
