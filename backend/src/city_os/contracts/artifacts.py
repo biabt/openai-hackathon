@@ -35,16 +35,19 @@ Latitude = Annotated[FiniteFloat, Field(ge=-90, le=90)]
 Sha256Value = Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")]
 H3Cell = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{15}$", strict=True)]
 NonEmptyText = Annotated[
-    str, StringConstraints(strip_whitespace=True, min_length=1, strict=True)
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, pattern=r"\S", strict=True),
 ]
 RelativePosixPath = Annotated[
     str,
-    StringConstraints(min_length=1, strict=True),
+    StringConstraints(strip_whitespace=True, min_length=1, strict=True),
     WithJsonSchema(
         {
             "type": "string",
             "minLength": 1,
-            "pattern": r"^(?!/)(?!.*\\)(?!.*(?:^|/)(?:\.|\.\.)(?:/|$))(?!.*//).+$",
+            "pattern": (
+                r"^(?=.*\S)(?!/)(?!.*\\)(?!.*(?:^|/)(?:\.|\.\.)(?:/|$))(?!.*//).+$"
+            ),
         }
     ),
 ]

@@ -1,5 +1,11 @@
 {
   "api_version": "1.0",
+  "bounds": {
+    "max_latitude": -23.35,
+    "max_longitude": -46.35,
+    "min_latitude": -24.0,
+    "min_longitude": -46.85
+  },
   "city": "São Paulo",
   "default_seed": 42,
   "fleet_size_bounds": {

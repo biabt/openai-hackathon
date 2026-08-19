@@ -18,6 +18,7 @@ from city_os.contracts.api import (
     CallSnapshot,
     CallStatus,
     FleetSizeBounds,
+    GeographicBounds,
     MethodologyMetadata,
     PairedMetrics,
     ScenarioObservation,
@@ -59,6 +60,7 @@ FROZEN_MODELS: tuple[type[BaseModel], ...] = (
     CameraObservation,
     EdgeState,
     FleetSizeBounds,
+    GeographicBounds,
     H3Density,
     MethodologyMetadata,
     PairedMetrics,
@@ -132,6 +134,12 @@ def _bootstrap() -> BootstrapResponse:
         optimization_cadence_minutes=15,
         forecast_horizon_minutes=60,
         default_seed=42,
+        bounds=GeographicBounds(
+            min_longitude=-46.85,
+            min_latitude=-24.0,
+            max_longitude=-46.35,
+            max_latitude=-23.35,
+        ),
         fleet_size_bounds=FleetSizeBounds(minimum=1, maximum=120, default=3),
         scenarios=_scenarios(),
         layer_urls={

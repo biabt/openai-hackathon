@@ -3,6 +3,8 @@
 from datetime import UTC, datetime
 
 import pytest
+from jsonschema import Draft202012Validator
+from jsonschema.exceptions import ValidationError as JsonSchemaValidationError
 from pydantic import ValidationError
 
 from city_os.contracts.artifacts import (
@@ -250,11 +252,66 @@ def test_artifact_json_schema_preserves_declarative_wire_constraints() -> None:
     assert edge_schema["properties"]["geometry_wkb"]["contentEncoding"] == "base64"
     for field in ("camera_id", "object_class", "direction"):
         assert camera_schema["properties"][field]["minLength"] == 1
+        assert camera_schema["properties"][field]["pattern"] == r"\S"
     for field in ("name", "media_type"):
         assert entry_schema["properties"][field]["minLength"] == 1
+        assert entry_schema["properties"][field]["pattern"] == r"\S"
     path_schema = entry_schema["properties"]["path"]
     assert path_schema["minLength"] == 1
-    assert "pattern" in path_schema
+    assert path_schema["pattern"] == (
+        r"^(?=.*\S)(?!/)(?!.*\\)(?!.*(?:^|/)(?:\.|\.\.)(?:/|$))(?!.*//).+$"
+    )
+
+
+@pytest.mark.parametrize("field", ["camera_id", "object_class", "direction"])
+def test_camera_text_schema_matches_runtime_for_whitespace_only_values(field: str) -> None:
+    """Schema-only camera producers must reject the whitespace runtime trims to empty."""
+    runtime_payload = camera_payload(**{field: " \t "})
+    schema_payload = CameraObservation.model_validate(camera_payload()).model_dump(mode="json")
+    schema_payload[field] = " \t "
+
+    with pytest.raises(ValidationError):
+        CameraObservation.model_validate(runtime_payload)
+    with pytest.raises(JsonSchemaValidationError) as error:
+        Draft202012Validator(CameraObservation.model_json_schema()).validate(schema_payload)
+    assert list(error.value.path) == [field]
+
+
+@pytest.mark.parametrize("field", ["name", "media_type", "path"])
+def test_artifact_entry_schema_matches_runtime_for_whitespace_only_values(field: str) -> None:
+    """Schema-only manifests must reject the whitespace runtime trims to empty."""
+    valid_entry = manifest_payload()["artifacts"][0]  # type: ignore[index]
+    runtime_payload = valid_entry | {field: " \t "}  # type: ignore[operator]
+    schema_payload = ArtifactEntry.model_validate(valid_entry).model_dump(mode="json")
+    schema_payload[field] = " \t "
+
+    with pytest.raises(ValidationError):
+        ArtifactEntry.model_validate(runtime_payload)
+    with pytest.raises(JsonSchemaValidationError) as error:
+        Draft202012Validator(ArtifactEntry.model_json_schema()).validate(schema_payload)
+    assert list(error.value.path) == [field]
+
+
+def test_nonempty_artifact_strings_preserve_runtime_trimming() -> None:
+    """Adding schema patterns must not stop runtime whitespace normalization."""
+    camera = CameraObservation.model_validate(
+        camera_payload(camera_id=" cam-1 ", object_class=" bus ", direction=" northbound ")
+    )
+    entry = ArtifactEntry.model_validate(
+        manifest_payload()["artifacts"][0]
+        | {"name": " roads ", "media_type": " application/json ", "path": " roads.json "}  # type: ignore[index,operator]
+    )
+
+    assert (camera.camera_id, camera.object_class, camera.direction) == (
+        "cam-1",
+        "bus",
+        "northbound",
+    )
+    assert (entry.name, entry.media_type, entry.path) == (
+        "roads",
+        "application/json",
+        "roads.json",
+    )
 
 
 @pytest.mark.parametrize(

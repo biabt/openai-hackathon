@@ -25,7 +25,10 @@ class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
 
-NonEmptyString = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
+NonEmptyString = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, pattern=r"\S"),
+]
 NodeId = Annotated[int, Field(strict=True, ge=0)]
 NonNegativeInt = Annotated[int, Field(strict=True, ge=0)]
 PositiveInt = Annotated[int, Field(strict=True, ge=1)]
@@ -311,6 +314,21 @@ class FleetSizeBounds(StrictModel):
         return self
 
 
+class GeographicBounds(StrictModel):
+    min_longitude: Annotated[FiniteNumber, Field(ge=-180, le=180)]
+    min_latitude: Annotated[FiniteNumber, Field(ge=-90, le=90)]
+    max_longitude: Annotated[FiniteNumber, Field(ge=-180, le=180)]
+    max_latitude: Annotated[FiniteNumber, Field(ge=-90, le=90)]
+
+    @model_validator(mode="after")
+    def _validate_axis_order(self) -> Self:
+        if self.min_longitude >= self.max_longitude:
+            raise ValueError("min_longitude must be less than max_longitude")
+        if self.min_latitude >= self.max_latitude:
+            raise ValueError("min_latitude must be less than max_latitude")
+        return self
+
+
 class BootstrapResponse(StrictModel):
     api_version: Literal["1.0"]
     city: Literal["São Paulo"]
@@ -319,10 +337,17 @@ class BootstrapResponse(StrictModel):
     frame_interval_minutes: Literal[5]
     optimization_cadence_minutes: Literal[15]
     forecast_horizon_minutes: Literal[60]
-    default_seed: NonNegativeInt
+    default_seed: PortableSeed
+    bounds: GeographicBounds
     fleet_size_bounds: FleetSizeBounds
     scenarios: Annotated[tuple[ScenarioObservation, ...], Field(strict=False)]
-    layer_urls: Annotated[dict[NonEmptyString, LocalAssetUrl], Field(strict=False)]
+    layer_urls: Annotated[
+        dict[NonEmptyString, LocalAssetUrl],
+        Field(
+            strict=False,
+            json_schema_extra={"propertyNames": {"minLength": 1, "pattern": r"\S"}},
+        ),
+    ]
 
     @model_validator(mode="after")
     def _validate_scenario_ids(self) -> Self:
@@ -387,7 +412,7 @@ class PairedMetrics(StrictModel):
 
 
 class MethodologyMetadata(StrictModel):
-    call_tape_seed: NonNegativeInt
+    call_tape_seed: PortableSeed
     calibration_target_seconds: Literal[1260]
     calibration_description: NonEmptyString
     data_label: Literal["simulated"]
@@ -444,4 +469,10 @@ class SimulationJobResponse(StrictModel):
             raise ValueError("methodology must be present exactly for completed jobs")
         if is_failed != (self.error is not None):
             raise ValueError("error must be present exactly for failed jobs")
+        if (
+            is_completed
+            and self.methodology is not None
+            and self.methodology.call_tape_seed != self.request.seed
+        ):
+            raise ValueError("methodology call_tape_seed must equal request seed")
         return self

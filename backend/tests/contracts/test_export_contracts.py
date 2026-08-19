@@ -29,6 +29,7 @@ EXPECTED_MODEL_DEFINITIONS = {
     "CameraObservation",
     "EdgeState",
     "FleetSizeBounds",
+    "GeographicBounds",
     "H3Density",
     "MethodologyMetadata",
     "PairedMetrics",
@@ -162,6 +163,12 @@ def test_bootstrap_round_trips_through_pydantic_and_is_canonical(tmp_path: Path)
     assert bootstrap.optimization_cadence_minutes == 15
     assert bootstrap.forecast_horizon_minutes == 60
     assert bootstrap.default_seed == 42
+    assert bootstrap.bounds.model_dump() == {
+        "max_latitude": -23.35,
+        "max_longitude": -46.35,
+        "min_latitude": -24.0,
+        "min_longitude": -46.85,
+    }
     assert bootstrap.fleet_size_bounds.default == 3
     assert [scenario.id for scenario in bootstrap.scenarios] == [
         "flood-aricanduva-1730",
@@ -248,6 +255,17 @@ def test_committed_fixtures_validate_against_matching_schema_definitions() -> No
     )
     for line in _read_export(BACKEND_ROOT, ARTIFACT_PATHS[2]).decode("utf-8").splitlines():
         frame_validator.validate(json.loads(line))
+
+
+def test_committed_bootstrap_bounds_match_draft_schema() -> None:
+    """Missing or out-of-range map bounds make the canonical portal viewport unusable."""
+    schema = _committed_schema()
+    bounds = json.loads(_read_export(BACKEND_ROOT, ARTIFACT_PATHS[1]))["bounds"]
+    validator = _definition_validator(schema, "GeographicBounds")
+
+    validator.validate(bounds)
+    with pytest.raises(JsonSchemaValidationError):
+        validator.validate(bounds | {"min_longitude": -181.0})
 
 
 def test_committed_fixtures_validate_against_full_root_schema() -> None:

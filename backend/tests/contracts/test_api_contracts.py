@@ -34,6 +34,17 @@ from city_os.contracts.api import (
 H3_R8 = "8828308281fffff"
 
 
+def valid_bounds(**overrides: object) -> dict[str, object]:
+    value: dict[str, object] = {
+        "min_longitude": -46.85,
+        "min_latitude": -24.0,
+        "max_longitude": -46.35,
+        "max_latitude": -23.35,
+    }
+    value.update(overrides)
+    return value
+
+
 def valid_scenario(**overrides: object) -> dict[str, object]:
     value: dict[str, object] = {
         "id": "scenario-1",
@@ -119,6 +130,7 @@ def valid_bootstrap(**overrides: object) -> dict[str, object]:
         "optimization_cadence_minutes": 15,
         "forecast_horizon_minutes": 60,
         "default_seed": 0,
+        "bounds": valid_bounds(),
         "fleet_size_bounds": {"minimum": 1, "maximum": 120, "default": 1},
         "scenarios": [valid_scenario()],
         "layer_urls": {"roads": "/layers/roads.geojson"},
@@ -134,9 +146,9 @@ def valid_paired_metrics() -> PairedMetrics:
     )
 
 
-def valid_methodology() -> MethodologyMetadata:
+def valid_methodology(seed: int = 0) -> MethodologyMetadata:
     return MethodologyMetadata(
-        call_tape_seed=0,
+        call_tape_seed=seed,
         calibration_target_seconds=1260,
         calibration_description="Calibrated simulation",
         data_label="simulated",
@@ -210,6 +222,17 @@ def test_simulation_request_accepts_unbounded_positive_fleet() -> None:
 
     assert request.scenario_id == "scenario-1"
     assert request.fleet_size == 101
+
+
+def test_nonempty_string_schema_matches_runtime_whitespace_rejection() -> None:
+    """Transport schema must reject the whitespace-only ID rejected after stripping."""
+    payload = {"scenario_id": "   ", "fleet_size": 1, "seed": 0}
+    schema = SimulationRequest.model_json_schema()
+
+    assert schema["properties"]["scenario_id"]["pattern"] == r"\S"
+    assert not Draft202012Validator(schema).is_valid(payload)
+    with pytest.raises(ValidationError):
+        SimulationRequest.model_validate(payload)
 
 
 @pytest.mark.parametrize("cell", ["8828308281ffffF", "8828308281ffffe", "not-a-cell"])
@@ -369,6 +392,103 @@ def test_bootstrap_rejects_duplicate_scenario_ids() -> None:
         BootstrapResponse.model_validate(valid_bootstrap(scenarios=scenarios))
 
 
+def test_bootstrap_requires_typed_geographic_bounds() -> None:
+    """The portal viewport must be carried by the typed bootstrap contract."""
+    bootstrap = BootstrapResponse.model_validate(valid_bootstrap())
+
+    assert type(bootstrap.bounds).__name__ == "GeographicBounds"
+    assert bootstrap.bounds.min_longitude == -46.85
+    with pytest.raises(ValidationError):
+        BootstrapResponse.model_validate(valid_bootstrap(bounds=None))
+
+
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        valid_bounds(min_longitude=-181.0),
+        valid_bounds(max_longitude=181.0),
+        valid_bounds(min_latitude=-91.0),
+        valid_bounds(max_latitude=91.0),
+        valid_bounds(min_longitude=inf),
+    ],
+)
+def test_geographic_bounds_range_schema_matches_runtime(bounds: dict[str, object]) -> None:
+    """Draft 2020-12 and runtime must share finite coordinate ranges."""
+    schema = BootstrapResponse.model_json_schema()
+    bounds_schema = {"$defs": schema["$defs"], **schema["$defs"]["GeographicBounds"]}
+
+    assert not Draft202012Validator(bounds_schema).is_valid(bounds)
+    with pytest.raises(ValidationError):
+        BootstrapResponse.model_validate(valid_bootstrap(bounds=bounds))
+
+
+@pytest.mark.parametrize(
+    "bounds",
+    [
+        valid_bounds(min_longitude=-46.35, max_longitude=-46.35),
+        valid_bounds(min_longitude=-46.0, max_longitude=-47.0),
+        valid_bounds(min_latitude=-23.35, max_latitude=-23.35),
+        valid_bounds(min_latitude=-23.0, max_latitude=-24.0),
+    ],
+)
+def test_geographic_bounds_require_strictly_increasing_axes(bounds: dict[str, object]) -> None:
+    """Degenerate or reversed viewports cannot initialize a map."""
+    with pytest.raises(ValidationError):
+        BootstrapResponse.model_validate(valid_bootstrap(bounds=bounds))
+
+
+def test_bootstrap_layer_url_property_names_reject_whitespace() -> None:
+    """Map layer dictionary keys follow the same nonempty-string wire contract."""
+    layer_schema = BootstrapResponse.model_json_schema()["properties"]["layer_urls"]
+
+    assert layer_schema["propertyNames"]["pattern"] == r"\S"
+    assert not Draft202012Validator(layer_schema).is_valid({"   ": "/layers/roads.geojson"})
+    with pytest.raises(ValidationError):
+        BootstrapResponse.model_validate(
+            valid_bootstrap(layer_urls={"   ": "/layers/roads.geojson"})
+        )
+
+
+@pytest.mark.parametrize("seed", [0, 2_147_483_647])
+def test_bootstrap_and_methodology_accept_portable_seed_boundaries(seed: int) -> None:
+    """Every public seed field uses the same portable endpoints."""
+    bootstrap = BootstrapResponse.model_validate(valid_bootstrap(default_seed=seed))
+    methodology = valid_methodology(seed)
+
+    assert bootstrap.default_seed == seed
+    assert methodology.call_tape_seed == seed
+
+
+@pytest.mark.parametrize(
+    ("model", "field", "payload"),
+    [
+        (BootstrapResponse, "default_seed", valid_bootstrap(default_seed=2_147_483_648)),
+        (
+            MethodologyMetadata,
+            "call_tape_seed",
+            {
+                "call_tape_seed": 2_147_483_648,
+                "calibration_target_seconds": 1260,
+                "calibration_description": "Calibrated simulation",
+                "data_label": "simulated",
+            },
+        ),
+    ],
+)
+def test_public_seed_schema_matches_runtime_portable_maximum(
+    model: type[BootstrapResponse] | type[MethodologyMetadata],
+    field: str,
+    payload: dict[str, object],
+) -> None:
+    """Advertised defaults and methodology seeds cannot exceed request portability."""
+    schema = model.model_json_schema()
+
+    assert schema["properties"][field]["maximum"] == 2_147_483_647
+    assert not Draft202012Validator(schema).is_valid(payload)
+    with pytest.raises(ValidationError):
+        model.model_validate(payload)
+
+
 def test_parse_response_requires_error_exactly_for_fallback() -> None:
     """Clients need an error whenever the parsing result is a fallback, and never otherwise."""
     observation = ScenarioObservation.model_validate(valid_scenario())
@@ -473,6 +593,26 @@ def test_job_response_requires_completed_payloads_and_failed_error() -> None:
             methodology=None,
             error=None,
         )
+
+
+def test_completed_job_requires_methodology_to_echo_request_seed() -> None:
+    """A completed result must identify the exact deterministic call tape requested."""
+    payload = {
+        "simulation_id": "sim-run_1",
+        "request": {"scenario_id": "scenario-1", "fleet_size": 1, "seed": 42},
+        "status": "completed",
+        "metrics": valid_paired_metrics().model_dump(mode="json"),
+        "methodology": valid_methodology(43).model_dump(mode="json"),
+        "error": None,
+    }
+
+    with pytest.raises(ValidationError):
+        SimulationJobResponse.model_validate(payload)
+
+    payload["methodology"] = valid_methodology(42).model_dump(mode="json")
+    completed = SimulationJobResponse.model_validate(payload)
+    assert completed.methodology is not None
+    assert completed.methodology.call_tape_seed == 42
 
 
 def test_job_response_schema_exposes_the_runtime_terminal_conditions() -> None:
