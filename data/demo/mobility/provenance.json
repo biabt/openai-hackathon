@@ -1,0 +1,22 @@
+{
+  "asset": "artesp_sp280_km14_2025-01-01_07.csv",
+  "description": "Aggregate daily automatic traffic-sensor counts for SP-280 km 14, 2025-01-01 through 2025-01-07",
+  "publisher": "ARTESP - Agencia de Transportes do Estado de Sao Paulo",
+  "dataset_title": "Volume de Trafego",
+  "dataset_url": "https://dadosabertos.artesp.sp.gov.br/dataset/volume-de-trafego",
+  "resource_id": "447bb970-64df-4bdd-b9fd-b131bd404e00",
+  "resource_title": "Contagem SAT's por dia em 2025",
+  "resource_url": "https://dadosabertos.artesp.sp.gov.br/dataset/63017848-7c66-4a35-9c9a-ad4ef855b9c2/resource/447bb970-64df-4bdd-b9fd-b131bd404e00/download/contagem_diaria_2025.csv",
+  "resource_md5_as_published": "6dcaa8d064a380177bb592bdbfa6d14b",
+  "resource_last_modified": "2026-02-12T17:11:16.164643",
+  "license_id": "other-pd",
+  "license_title_as_published": "Outra (Dominio Publico)",
+  "license_note": "The official ARTESP CKAN package marks the dataset as public domain. Attribution is retained here despite no attribution requirement being stated.",
+  "retrieved_at": "2026-08-19T00:00:00-03:00",
+  "source_observation_period": ["2025-01-01", "2025-01-07"],
+  "privacy": "Aggregate counts only; no personal data, images, plates, device IDs, or trajectories.",
+  "conversion_script": "scripts/build_demo_mobility_sample.py",
+  "conversion_command": "python3 scripts/build_demo_mobility_sample.py",
+  "output_sha256": "680bbe0e0979ff3a7c7a6c9a9aa8e4259d339c2739a689bcd00143d7885b1eed",
+  "record_count": 42
+}
