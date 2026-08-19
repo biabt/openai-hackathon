@@ -1,378 +1,272 @@
 # CityOS São Paulo
 
-> **An operational system for São Paulo: model how people move, estimate what each region needs, and coordinate city resources before pressure becomes a crisis.**
+> **Model the flow. Estimate the need. Coordinate the city.**
 
-## The idea
+CityOS is an operational system for São Paulo.
 
-- São Paulo is one connected system—not a collection of isolated departments.
-- People move continuously between home, work, schools, stations, hospitals, events, and commercial areas.
-- Those movements create changing needs for:
-  - emergency response;
-  - transit capacity;
-  - flood operations;
-  - traffic control;
-  - public safety;
-  - field crews and public services.
-- **CityOS models that shared urban flow once and lets many municipal applications use it.**
+- It models how people move between city regions.
+- It estimates how many people are present in each region.
+- It forecasts what each region may need next.
+- It helps position limited public resources where they can create the most impact.
 
-The hackathon application is **Ambulance Allocation**. It is the first application built on CityOS—not the definition or limit of the platform.
+**Ambulance Allocation is the first CityOS application—not the whole platform.**
+
+## One city model, many applications
 
 ```mermaid
 flowchart LR
-    A["Mobility signals<br/>metro · buses · cars · cameras"] --> B["Regional flow model<br/>where people come from and go"]
-    B --> C["Regional activity<br/>how many people are present"]
-    C --> D["Regional needs<br/>what pressure may appear next"]
-    D --> E["City operations<br/>where resources should go"]
-    E --> F["Ambulances<br/>first CityOS application"]
-    E --> G["Flood · Transit · Traffic · Crews<br/>next applications"]
+    A["Metro · Buses · Cars · Events"] --> B["Flow between regions"]
+    B --> C["People present"]
+    C --> D["Regional needs"]
+    D --> E["Resource allocation"]
+    E --> F["Ambulances"]
+    E --> G["Flood response"]
+    E --> H["Traffic and transit"]
+    E --> I["Municipal crews"]
 ```
 
-## Why start with urban flow?
+## Why model flow?
 
-- Directly measuring every person and every need is impossible—and undesirable.
-- Mobility systems already provide useful aggregate signals:
-  - **Metro:** station entries, exits, transfers, schedules, and service disruptions.
-  - **Buses:** routes, GPS positions, speed, headway, and passenger-volume signals.
-  - **Cars:** directed road topology, speeds, camera counts, congestion, and closures.
-  - **Events:** concerts, demonstrations, floods, and temporary road restrictions.
-- These signals are:
-  - already grouped in space and time;
-  - easier to anonymize;
-  - strongly related to where city activity is increasing or decreasing;
-  - reusable across many public-service problems.
+People move constantly between:
 
-CityOS therefore asks:
+- homes;
+- offices;
+- schools;
+- metro stations;
+- bus corridors;
+- hospitals;
+- commercial areas;
+- concerts and major events.
 
-> **How many people are moving between regions, how long will they remain there, and what municipal need does that activity create?**
+That movement changes where public services are needed.
 
-## 1. Divide São Paulo into operational regions
+CityOS uses aggregate mobility signals because they are:
 
-- CityOS uses **H3 resolution 8** cells as a shared spatial language.
-- Each cell can contain:
-  - road nodes and directed road edges;
-  - metro stations and transit access;
+- easier to obtain than direct measurements of every person;
+- naturally grouped by place and time;
+- useful without identifying individuals;
+- reusable across different municipal operations.
+
+## How CityOS works
+
+### 1. Divide São Paulo into regions
+
+- The city is divided into H3 resolution-8 cells.
+- Every source uses the same regional IDs.
+- A cell can contain:
+  - roads;
+  - metro stations;
   - bus corridors;
-  - camera observations;
-  - hospitals and municipal facilities;
-  - event or flood impact areas;
-  - demand and resource forecasts.
-- Every data source is mapped to the same cell IDs.
+  - cameras;
+  - hospitals;
+  - events;
+  - flood or closure areas.
 
-Let:
+### 2. Estimate movement between regions
 
-```math
-\mathcal{H}=\{h_1,h_2,\ldots,h_n\}
-```
+CityOS combines different modes:
 
-be the set of city regions and:
+- **Metro**
+  - station entries and exits;
+  - transfers;
+  - schedules and disruptions.
+- **Buses**
+  - routes and GPS positions;
+  - speed and headway;
+  - passenger-volume factors.
+- **Cars**
+  - directed roads;
+  - camera counts;
+  - traffic speed and congestion;
+  - road closures.
 
-```math
-\mathcal{M}=\{m_1,m_2,m_3,m_4,m_5\}
-```
-
-the available mobility modes: metro, bus, car, walking, and cycling.
-
-## 2. Model flow between regions
-
-For each pair of regions, mode, and five-minute interval, CityOS estimates:
-
-```math
-F_{ij}^{(m)}(t)
-```
-
-- $i$: origin region.
-- $j$: destination region.
-- $m$: mobility mode.
-- $t$: five-minute time bucket.
-- $F$: estimated people moving from $i$ to $j$ using $m$ at $t$.
-
-The combined regional flow is:
+For origin region `i`, destination region `j`, and time `t`:
 
 ```math
-F_{ij}(t)=\sum_{m\in\mathcal{M}}\omega_m F_{ij}^{(m)}(t)
+F_{ij}(t)=F_{ij}^{metro}(t)+F_{ij}^{bus}(t)+F_{ij}^{car}(t)
 ```
 
-where $\omega_m$ converts each mode into a comparable people-flow estimate.
+- `F` is the estimated people flow.
+- Every direction is modeled separately.
+- Five-minute time buckets show how the city changes during the day.
 
-### What each mode tells us
+When observations are missing, CityOS estimates them using:
 
-- **Metro flow**
-  - station entry increases activity near the origin;
-  - station exit increases activity near the destination;
-  - transfers explain movement across distant regions;
-  - disruptions shift pressure to buses and roads.
-- **Bus flow**
-  - GPS and speed describe corridor movement;
-  - route and headway connect origin and destination regions;
-  - passenger factors convert vehicle movement into people movement.
-- **Car flow**
-  - camera crossings constrain specific directed edges;
-  - road speed estimates congestion and travel time;
-  - road direction prevents an observation from affecting the wrong traffic direction.
-
-### Filling the gaps
-
-Sensors do not cover every road or every time bucket. CityOS estimates the missing directional flows with:
+- nearby road behavior;
+- the previous time bucket;
+- network flow conservation;
+- observation confidence;
+- non-negative constraints.
 
 ```math
-\hat f_t=\arg\min_{f\ge 0}
-\left[
-\|W_t(H_tf-y_t)\|_2^2
-+\lambda_s f^\top L_Ef
-+\lambda_t\|f-f_{t-1}\|_2^2
-+\lambda_c\|Bf-b_t\|_2^2
-\right]
+EstimatedFlow = SensorFit + SpatialConsistency + TimeConsistency + FlowConservation
 ```
 
-- $y_t$: observed counts.
-- $H_t$: mapping from sensors to directed edges.
-- $W_t$: observation confidence.
-- $L_E$: relationship between neighboring road edges.
-- $B$: network incidence matrix.
-- $b_t$: legitimate sources and sinks at boundaries or activity centers.
+### 3. Estimate how many people are present
 
-The result is:
+People present in a region depend on:
 
-- non-negative;
-- directional;
-- deterministic;
-- confidence-aware;
-- explicit about which values are observed and which are inferred.
-
-## 3. Convert movement into people present
-
-Flow says who is moving. City operations also need an estimate of **who is present**.
-
-For a road edge $e$:
+- residents already there;
+- arrivals from other regions;
+- departures to other regions;
+- time spent traveling or staying there;
+- vehicle occupancy and transit capacity.
 
 ```math
-N_e(t)=f_e(t)\cdot\tau_e(t)\cdot\kappa_e
+P_h(t)=P_h(t-1)+Arrivals_h(t)-Departures_h(t)
 ```
 
-- $f_e(t)$: vehicles or people per hour.
-- $\tau_e(t)$: time spent on the edge.
-- $\kappa_e$: conservative occupancy factor for car, bus, motorcycle, bicycle, or pedestrian flow.
+- `P_h(t)` is the estimated activity in region `h`.
+- It is an operational density proxy—not an exact population count.
 
-Congested travel time uses the BPR function:
+Road congestion also changes occupancy and travel time:
 
 ```math
-\tau_e(t)=\tau_e^0
-\left[1+0.15\left(\frac{f_e(t)}{c_e}\right)^4\right]
+TravelTime=FreeFlowTime\left[1+0.15\left(\frac{Flow}{Capacity}\right)^4\right]
 ```
 
-- $\tau_e^0$: free-flow travel time.
-- $c_e$: approximate edge capacity.
-- A blocked edge receives $\tau_e(t)=\infty$.
+### 4. Estimate regional needs
 
-Edge occupancy is allocated to H3 regions:
+People present do not automatically equal public-service demand.
 
-```math
-\rho_h(t)=
-\frac{1}{A_h}
-\sum_e \omega_{he}N_e(t)
-```
+CityOS also considers:
 
-- $\omega_{he}$: proportion of edge $e$ assigned to cell $h$.
-- $A_h$: area of cell $h$.
-- $\rho_h(t)$: inferred people/activity density.
-
-## 4. Estimate what each region needs
-
-Presence alone is not need. CityOS combines activity with context:
-
-- current and forecast mobility density;
-- time of day and periodic patterns;
-- land use and resident-population priors;
+- time of day;
+- historical regional patterns;
+- land use;
 - transit accessibility;
-- hospitals and public facilities;
-- active events, floods, closures, or other scenarios;
-- uncertainty in the underlying observations.
-
-For a municipal need type $k$ in region $h$:
-
-```math
-\lambda_h^{(k)}(t)=
-\exp\left(
-\beta_0^{(k)}
-+\beta^{(k)\top}z_{h,t}
-+u_h^{(k)}
-+s^{(k)}(t)
-+\sum_r\gamma_r^{(k)}K_r(h,t)
-\right)
-```
-
-- $z_{h,t}$: flow, density, accessibility, and contextual features.
-- $u_h$: persistent regional effect.
-- $s(t)$: time pattern.
-- $K_r(h,t)$: effect of scenario $r$.
-- $\lambda_h^{(k)}(t)$: expected need intensity—not an identified individual.
-
-For the ambulance application:
+- hospitals and facilities;
+- concerts and demonstrations;
+- floods and blocked roads;
+- uncertainty in the input data.
 
 ```math
-N_{h,t}^{call}\sim Pois\left(\lambda_h^{amb}(t)\Delta t\right)
+Need_h(t)=Base_h+Mobility_h(t)+Context_h(t)+Scenario_h(t)
 ```
 
-- Calls are synthetic and seeded.
-- The same immutable call tape is used for every policy.
-- The system forecasts regional pressure; it does not predict individual medical emergencies.
+The result is a regional need intensity for each application:
 
-## 5. Allocate city resources
+- emergency calls;
+- flood assistance;
+- traffic management;
+- transit support;
+- field crews.
 
-CityOS turns predicted need into an operational placement problem:
+### 5. Position city resources
+
+CityOS searches for a resource placement that balances:
+
+- fast response;
+- fewer extreme delays;
+- geographic equity;
+- low repositioning cost;
+- available fleet size.
 
 ```math
-\min_x
-\left[
-C_{0.90}(T(x))
-+\lambda_R R(x,x_{prev})
-+\lambda_E E(x)
-\right]
+BestPlacement=Minimum\left(TailResponse+MovementCost+EquityPenalty\right)
 ```
 
-subject to:
-
-```math
-\sum_i x_i=p,
-\qquad
-x_i\in\mathbb{Z}_{\ge0}
-```
-
-- $T(x)$: response-time distribution under placement $x$.
-- $C_{0.90}$: CVaR90 tail-risk score.
-- $R(x,x_{prev})$: cost of moving resources.
-- $E(x)$: penalty for poor geographic equity.
-- $p$: available fleet or resource count.
-- CVaR90 focuses the optimization on the worst responses—not only the average.
-
-The same approach can allocate:
-
-- ambulances;
-- flood-response equipment;
-- traffic agents;
-- maintenance crews;
-- temporary transit capacity;
-- inspection or public-service teams.
+The ambulance application focuses on p90: the response time experienced by the slowest 10% of calls.
 
 ## First application: Ambulance Allocation
 
 ### Before
 
-- Static, demand-aware placement.
-- Built from long-run average synthetic demand.
-- Does not know the upcoming event or short-horizon forecast.
-- Represents a credible non-predictive operational policy.
+- Static ambulance positions.
+- Based on long-term average demand.
+- No knowledge of the next event or disruption.
 
 ### After
 
-- Forecasts the next 60 simulated minutes.
-- Reoptimizes every 15 minutes and after scenario changes.
-- Moves only available ambulances.
-- Keeps repositioning ambulances dispatchable.
-- Includes movement cost, minimum benefit, and equity safeguards.
+- Forecasts the next 60 minutes.
+- Repositions available ambulances.
+- Reoptimizes every 15 minutes.
+- Reacts immediately to scenario changes.
+- Includes movement and geographic-equity costs.
 
-### Fair comparison
+### Fair experiment
 
-- Same fleet size.
-- Same call IDs, times, locations, and priorities.
-- Same traffic and road closures.
-- Same scene, transport, and handoff durations.
-- Separate simulation state prevents policy leakage.
-- Seed `42` reproduces the judged demo.
+Both policies receive the same:
 
-### Main result
+- fleet size;
+- emergency calls;
+- call priorities;
+- traffic conditions;
+- road closures;
+- service durations;
+- random seed.
 
-- Primary metric: **empirical p90 response time**.
-- Supporting evidence:
-  - mean, p50, and p95;
-  - service within 8, 12, and 20 minutes;
-  - worst-district p90;
-  - queued and unserved calls;
-  - repositioning distance.
+The primary comparison is:
+
+- **Before p90 response time**;
+- **After p90 response time**;
+- improvement in minutes and percentage.
+
+Supporting metrics include:
+
+- mean, p50, and p95;
+- service within 8, 12, and 20 minutes;
+- worst-district p90;
+- queued and unserved calls;
+- repositioning distance.
 
 ## What is implemented
 
-- **Spatial engine**
+- **City data layer**
   - directed São Paulo road graph;
-  - one-way and parallel-edge preservation;
-  - H3 resolution-8 grid;
-  - stable IDs, capacity, geometry, and free-flow cost;
-  - local PMTiles basemap pipeline.
-- **Mobility sensing**
-  - local YOLO adapter;
-  - short-lived tracking;
-  - directional counts for people, bicycles, motorcycles, cars, buses, and trucks;
-  - five-minute aggregate output only.
-- **Flow and density**
-  - constrained sparse flow inference;
-  - BPR travel time and blocked-edge behavior;
-  - occupancy priors and H3 allocation;
-  - confidence propagation and deterministic artifacts.
-- **Scenario intelligence**
-  - flood, event, and blocked-road observations;
-  - typed structured parsing;
-  - validation and deterministic offline fallbacks.
-- **Simulation and optimization**
-  - seeded call tapes;
-  - full ambulance lifecycle and queueing;
-  - directed time-aware routing;
-  - static baseline and dynamic CVaR90 allocation;
+  - H3 regional grid;
+  - versioned and checksummed artifacts;
+  - local PMTiles basemap.
+- **Mobility layer**
+  - privacy-safe camera processing;
+  - directional people, bicycle, motorcycle, car, bus, and truck counts;
+  - five-minute aggregate buckets;
+  - graph-wide flow inference;
+  - H3 activity density.
+- **Scenario layer**
+  - event, flood, and blocked-road cards;
+  - typed validation;
+  - deterministic offline fallback.
+- **Simulation layer**
+  - seeded emergency-call generation;
+  - ambulance dispatch and full lifecycle;
+  - directed routing and closures;
+  - static and optimized policies;
   - paired six-hour simulation.
-- **API and command portal**
-  - FastAPI and replayable WebSocket stream;
-  - São Paulo map with density, flow, cameras, calls, and ambulances;
-  - scenario cards, fleet slider, playback, and Before/After metrics;
-  - local-only assets and offline demo mode.
-- **Release quality**
-  - versioned Parquet, GeoJSON, NPZ, PMTiles, and JSON artifacts;
-  - SHA-256 verification and corruption rejection;
-  - unit, contract, API, WebSocket, component, and E2E tests;
-  - deterministic fixture and smoke workflow.
+- **Optimization layer**
+  - tail-response objective;
+  - equity penalty;
+  - repositioning cost;
+  - deterministic local search.
+- **Product layer**
+  - FastAPI service;
+  - WebSocket simulation stream;
+  - offline São Paulo command portal;
+  - fleet controls, scenarios, playback, map layers, and Before/After metrics.
+- **Release layer**
+  - one-command demo;
+  - offline assets;
+  - deterministic seed `42`;
+  - unit, contract, API, WebSocket, component, and end-to-end tests.
 
 ## Data honesty
 
-- **Real**
-  - OpenStreetMap road geometry;
-  - documented and authorized mobility-source provenance.
-- **Observed**
-  - aggregate directional counts from local samples.
-- **Inferred**
-  - missing flows;
-  - travel conditions;
-  - network occupancy;
-  - H3 activity density.
-- **Synthetic**
-  - emergency calls;
-  - service durations;
-  - ambulance positions;
-  - hackathon scenario cards.
-- **Computed**
-  - routes;
-  - dispatches;
-  - allocations;
-  - response metrics.
+- **Real:** OpenStreetMap roads and documented mobility-source provenance.
+- **Observed:** aggregate directional counts.
+- **Inferred:** missing flow, congestion, occupancy, and regional density.
+- **Synthetic:** emergency calls, ambulance positions, and hackathon scenarios.
+- **Computed:** routes, allocations, response times, and metrics.
 
-## Privacy by design
+## Privacy
 
 - No facial recognition.
-- No cross-camera re-identification.
+- No cross-camera identification.
 - No MAC-address collection.
-- No source frames or license plates in persisted artifacts.
-- Track IDs expire in memory and are never exported.
-- Camera artifacts contain only:
-  - camera and directed-edge IDs;
-  - five-minute bucket;
-  - object class and direction;
-  - aggregate count and confidence.
+- No source frames in persisted artifacts.
+- Temporary track IDs expire in memory.
+- Only aggregate counts and confidence are stored.
 
-## Run the offline demo
-
-### Requirements
-
-- Python 3.12
-- Node.js and npm
-- `uv`
-- Docker only to rebuild PMTiles
+## Run the demo
 
 ```bash
 make install
@@ -381,7 +275,7 @@ make test
 make demo
 ```
 
-Run the automated release check with:
+Run the automated check with:
 
 ```bash
 make smoke
@@ -389,36 +283,31 @@ make smoke
 
 ## Hackathon walkthrough
 
-1. Show São Paulo as connected H3 regions—not isolated points.
-2. Turn on roads, cameras, directional flow, and activity density.
-3. Run the static and optimized ambulance policies with seed `42`.
-4. Activate the Allianz Parque event and show predicted regional pressure.
-5. Activate the Aricanduva flood and show changed flows, ETAs, and positions.
-6. Change fleet size and compare p90 and worst-district coverage.
-7. Return to the platform message: the same CityOS core can coordinate other city resources.
+1. Show São Paulo divided into connected regions.
+2. Show mobility flow and activity density.
+3. Run the Before and After ambulance policies.
+4. Activate the Allianz Parque event.
+5. Activate the Aricanduva flood.
+6. Change the fleet size.
+7. Compare p90 and worst-district coverage.
+8. Show how the same CityOS core can support other city operations.
 
-## What CityOS is—and is not
+## Important boundaries
 
-- **CityOS is:**
-  - an operational model of São Paulo;
-  - a shared flow, need, simulation, and allocation platform;
-  - a transparent decision-support system;
-  - an offline-first, reproducible hackathon prototype.
-- **CityOS is not:**
-  - a medical device;
-  - a clinical triage system;
-  - a live SAMU replacement;
-  - individual tracking;
-  - a claim that inferred density is an exact population count.
+- CityOS is a decision-support prototype.
+- It does not identify or predict individual people.
+- It is not a medical device.
+- It is not a live SAMU dispatch replacement.
+- Inferred density is not an exact census measurement.
 
 ## Documentation
 
-- [Product and technical design](docs/superpowers/specs/2026-08-19-ambulance-flow-allocation-design.md)
-- [Parallel implementation plan](docs/superpowers/plans/2026-08-19-city-os-parallel-integration.md)
+- [Product design](docs/superpowers/specs/2026-08-19-ambulance-flow-allocation-design.md)
+- [Integration plan](docs/superpowers/plans/2026-08-19-city-os-parallel-integration.md)
 - [Data and flow engine](docs/superpowers/plans/2026-08-19-city-os-data-flow-engine.md)
 - [Simulation and API](docs/superpowers/plans/2026-08-19-city-os-simulation-api.md)
 - [Command portal](docs/superpowers/plans/2026-08-19-city-os-command-portal.md)
 
 ---
 
-> **Model the flow. Estimate the need. Coordinate the city.**
+> **CityOS turns movement into operational intelligence for São Paulo.**
