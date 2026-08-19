@@ -1,4 +1,4 @@
-# Ambulance Flow Allocation MVP — Design Specification
+# City OS — Ambulance Allocation Vertical Design Specification
 
 **Date:** 2026-08-19  
 **Status:** Approved design, ready for implementation planning  
@@ -6,7 +6,7 @@
 
 ## 1. Product objective
 
-Build a reproducible simulation showing how predictive ambulance positioning can reduce the 90th-percentile emergency response time in São Paulo.
+**City OS** is a city-flow intelligence platform. Its first vertical is a reproducible simulation showing how predictive ambulance positioning can reduce the 90th-percentile emergency response time in São Paulo.
 
 The system uses a real OpenStreetMap road graph and real observable mobility signals where available. It converts sparse directional flow observations into a graph-wide flow estimate, aggregates network occupancy into H3 density, generates transparent synthetic emergency calls, and compares two policies under identical conditions:
 
@@ -43,6 +43,7 @@ The MVP succeeds when it can:
 ## 4. Fixed MVP decisions
 
 - **Geography:** municipality of São Paulo.
+- **Product identity:** City OS; ambulance allocation is the first vertical built on the reusable flow-and-density core.
 - **Road model:** directed OSM multigraph; each permitted direction is a separate edge.
 - **Analysis grid:** H3 resolution 8.
 - **Flow aggregation interval:** five simulated minutes.
@@ -143,6 +144,7 @@ Responsibilities:
 
 Responsibilities:
 
+- Present the product as **City OS**, with the current workspace identified as the Ambulance Allocation vertical.
 - Render OSM streets, H3 density, edge flow, uncertainty, cameras, calls, ambulance paths, and event effects.
 - Provide scenario selection, fleet-size slider, playback controls, and layer toggles.
 - Show before/after metrics and distributions.
@@ -521,7 +523,7 @@ Illustrative wireframe values must be replaced by computed values.
 - Seeded discrete-event simulator.
 - Baseline and dynamic positioning policies.
 - FastAPI runtime with streamable paired simulations.
-- Map-based command portal.
+- Map-based City OS command portal for the Ambulance Allocation vertical.
 - Automated verification suite.
 - Demo seed and three-minute presentation script.
 - Methodology page explaining real, inferred, and simulated layers.
