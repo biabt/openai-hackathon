@@ -776,6 +776,7 @@
         "text": {
           "maxLength": 4000,
           "minLength": 1,
+          "pattern": "\\S",
           "title": "Text",
           "type": "string"
         }

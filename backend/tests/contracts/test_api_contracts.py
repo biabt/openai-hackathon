@@ -489,6 +489,16 @@ def test_public_seed_schema_matches_runtime_portable_maximum(
         model.model_validate(payload)
 
 
+def test_parse_request_schema_matches_runtime_whitespace_rejection() -> None:
+    """Parser transport schema must reject text that becomes empty after stripping."""
+    payload = {"text": "   "}
+    schema = ScenarioParseRequest.model_json_schema()
+
+    assert not Draft202012Validator(schema).is_valid(payload)
+    with pytest.raises(ValidationError):
+        ScenarioParseRequest.model_validate(payload)
+
+
 def test_parse_response_requires_error_exactly_for_fallback() -> None:
     """Clients need an error whenever the parsing result is a fallback, and never otherwise."""
     observation = ScenarioObservation.model_validate(valid_scenario())

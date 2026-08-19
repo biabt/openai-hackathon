@@ -358,7 +358,10 @@ class BootstrapResponse(StrictModel):
 
 
 class ScenarioParseRequest(StrictModel):
-    text: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=4000)]
+    text: Annotated[
+        str,
+        StringConstraints(strip_whitespace=True, min_length=1, max_length=4000, pattern=r"\S"),
+    ]
 
 
 class ApiError(StrictModel):
