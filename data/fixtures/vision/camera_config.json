@@ -1,0 +1,20 @@
+{
+  "camera_id": "synthetic-camera-001",
+  "edge_id": "synthetic-edge-forward",
+  "edge_ids": {
+    "a_to_b": "synthetic-edge-forward",
+    "b_to_a": "synthetic-edge-reverse"
+  },
+  "line": {
+    "a": [0, 50],
+    "b": [100, 50]
+  },
+  "roi": [[0, 0], [100, 0], [100, 100], [0, 100]],
+  "bucket_seconds": 300,
+  "hysteresis_px": 3,
+  "min_track_age_seconds": 0.1,
+  "min_track_observations": 2,
+  "track_ttl_seconds": 1,
+  "max_track_distance_px": 30,
+  "starts_at": "2026-08-19T12:00:00+00:00"
+}
