@@ -1,6 +1,6 @@
 "use client";
 
-import { Deck } from "@deck.gl/core";
+import { MapboxOverlay } from "@deck.gl/mapbox";
 import maplibregl from "maplibre-gl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -15,22 +15,27 @@ import {
   CITY_MAP_STYLE,
   LOCAL_PMTILES_URL,
   registerLocalPmtiles,
+  SAO_PAULO_BOUNDS,
   SAO_PAULO_VIEW,
 } from "./map-style";
 
 type MapErrorEvent = { error?: Error };
 
 type MapInstance = {
-  on: (event: "move" | "error", listener: (event: MapErrorEvent) => void) => void;
-  off: (event: "move" | "error", listener: (event: MapErrorEvent) => void) => void;
-  getCenter: () => { lng: number; lat: number };
-  getZoom: () => number;
-  getBearing: () => number;
-  getPitch: () => number;
+  on: (event: "error", listener: (event: MapErrorEvent) => void) => void;
+  off: (event: "error", listener: (event: MapErrorEvent) => void) => void;
+  addControl: (control: DeckOverlay) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  panBy: (offset: [number, number]) => void;
+  fitBounds: (
+    bounds: [[number, number], [number, number]],
+    options: { padding: number; duration: number; maxZoom: number },
+  ) => void;
   remove: () => void;
 };
 
-type DeckInstance = {
+type DeckOverlay = {
   setProps: (props: Record<string, unknown>) => void;
   finalize: () => void;
 };
@@ -38,7 +43,7 @@ type DeckInstance = {
 export type CityMapRuntime = {
   registerProtocol: () => () => void;
   createMap: (container: HTMLDivElement) => MapInstance;
-  createDeck: (container: HTMLDivElement, layers: ReturnType<typeof buildCityLayers>) => DeckInstance;
+  createOverlay: (layers: ReturnType<typeof buildCityLayers>) => DeckOverlay;
 };
 
 const defaultRuntime: CityMapRuntime = {
@@ -50,18 +55,16 @@ const defaultRuntime: CityMapRuntime = {
     zoom: SAO_PAULO_VIEW.zoom,
     minZoom: SAO_PAULO_VIEW.minZoom,
     maxZoom: SAO_PAULO_VIEW.maxZoom,
+    maxBounds: SAO_PAULO_BOUNDS.map((position) => [...position]) as [[number, number], [number, number]],
+    renderWorldCopies: false,
     attributionControl: false,
     preserveDrawingBuffer: false,
   }) as unknown as MapInstance,
-  createDeck: (container, layers) => new Deck({
-    parent: container,
-    width: "100%",
-    height: "100%",
-    controller: false,
-    initialViewState: SAO_PAULO_VIEW,
+  createOverlay: (layers) => new MapboxOverlay({
+    interleaved: true,
     layers,
     useDevicePixels: true,
-  }) as unknown as DeckInstance,
+  }) as unknown as DeckOverlay,
 };
 
 export type CityMapProps = {
@@ -91,9 +94,8 @@ export function CityMap({
   onSelectionChange,
 }: CityMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const deckContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapInstance | null>(null);
-  const deckRef = useRef<DeckInstance | null>(null);
+  const overlayRef = useRef<DeckOverlay | null>(null);
   const [assetError, setAssetError] = useState<string | null>(null);
   const [selection, setSelection] = useState<MapSelection | null>(null);
   const [visibility, setVisibility] = useState<CityLayerVisibility>({
@@ -115,61 +117,65 @@ export function CityMap({
   );
 
   useEffect(() => {
-    if (!mapContainerRef.current || !deckContainerRef.current) return;
+    if (!mapContainerRef.current) return;
 
     const unregister = runtime.registerProtocol();
     const map = runtime.createMap(mapContainerRef.current);
-    const deck = runtime.createDeck(deckContainerRef.current, layers);
+    const overlay = runtime.createOverlay(layers);
+    map.addControl(overlay);
     mapRef.current = map;
-    deckRef.current = deck;
-
-    const synchronizeCamera = () => {
-      const center = map.getCenter();
-      deck.setProps({
-        viewState: {
-          longitude: center.lng,
-          latitude: center.lat,
-          zoom: map.getZoom(),
-          bearing: map.getBearing(),
-          pitch: map.getPitch(),
-        },
-      });
-    };
+    overlayRef.current = overlay;
     const showAssetError = (event: MapErrorEvent) => {
       const detail = event.error?.message ? ` (${event.error.message})` : "";
       setAssetError(`Não foi possível carregar o mapa local de São Paulo${detail}.`);
     };
 
-    map.on("move", synchronizeCamera);
     map.on("error", showAssetError);
-    synchronizeCamera();
 
     return () => {
-      map.off("move", synchronizeCamera);
       map.off("error", showAssetError);
-      deck.finalize();
+      overlay.finalize();
       map.remove();
       unregister();
       mapRef.current = null;
-      deckRef.current = null;
+      overlayRef.current = null;
     };
     // The runtime is intentionally initialized once for this component instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runtime]);
 
   useEffect(() => {
-    deckRef.current?.setProps({ layers });
+    overlayRef.current?.setProps({ layers });
   }, [layers]);
 
   const toggleLayer = (layer: keyof CityLayerVisibility) => {
     setVisibility((current) => ({ ...current, [layer]: !current[layer] }));
   };
 
+  const navigate = (action: "zoom-in" | "zoom-out" | "left" | "right" | "fit") => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (action === "zoom-in") map.zoomIn();
+    if (action === "zoom-out") map.zoomOut();
+    if (action === "left") map.panBy([-80, 0]);
+    if (action === "right") map.panBy([80, 0]);
+    if (action === "fit") map.fitBounds(
+      SAO_PAULO_BOUNDS.map((position) => [...position]) as [[number, number], [number, number]],
+      { padding: 32, duration: 350, maxZoom: SAO_PAULO_VIEW.zoom },
+    );
+  };
+
   return (
     <figure className={className ? `city-map ${className}` : "city-map"} aria-label="Mapa operacional de São Paulo">
       <div className="city-map__viewport">
         <div ref={mapContainerRef} className="city-map__basemap" data-testid="maplibre-container" />
-        <div ref={deckContainerRef} className="city-map__overlay" data-testid="deck-container" />
+        <div className="city-map__navigation" aria-label="Controles do mapa">
+          <button type="button" aria-label="Aumentar zoom" onClick={() => navigate("zoom-in")}>+</button>
+          <button type="button" aria-label="Diminuir zoom" onClick={() => navigate("zoom-out")}>−</button>
+          <button type="button" aria-label="Enquadrar operação" onClick={() => navigate("fit")}>⌂</button>
+          <button type="button" aria-label="Mover mapa para a esquerda" onClick={() => navigate("left")}>←</button>
+          <button type="button" aria-label="Mover mapa para a direita" onClick={() => navigate("right")}>→</button>
+        </div>
         <MapLegend visibility={visibility} onToggle={toggleLayer} />
         {assetError ? (
           <div className="city-map__error" role="alert">

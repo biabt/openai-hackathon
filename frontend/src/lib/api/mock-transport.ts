@@ -10,6 +10,7 @@ import type {
 } from "@/lib/contracts/generated";
 import {
   CityOsTransportError,
+  type CityMapData,
   type CityOsTransport,
   type FrameListener,
   type FrameSubscriptionOptions,
@@ -21,6 +22,7 @@ export interface MockTransportOptions {
   bootstrap?: unknown;
   frames?: readonly unknown[];
   frameIntervalMs?: number;
+  defaultFleetSize?: number;
 }
 
 export class MockCityOsTransport implements CityOsTransport {
@@ -31,13 +33,24 @@ export class MockCityOsTransport implements CityOsTransport {
   #deliveredFrames = 0;
 
   constructor(options: MockTransportOptions = {}) {
-    this.#bootstrap = assertContract("BootstrapResponse", options.bootstrap ?? bootstrapFixture);
+    const bootstrap = structuredClone(options.bootstrap ?? bootstrapFixture) as BootstrapResponse;
+    if (options.defaultFleetSize !== undefined) {
+      bootstrap.fleet_size_bounds.default = options.defaultFleetSize;
+    }
+    this.#bootstrap = assertContract("BootstrapResponse", bootstrap);
     this.#frames = (options.frames ?? streamFixture).map((frame) => assertContract("SimulationFrame", frame));
     this.#frameIntervalMs = options.frameIntervalMs ?? 0;
   }
 
   async bootstrap(): Promise<BootstrapResponse> {
     return structuredClone(this.#bootstrap);
+  }
+
+  async loadMapData(): Promise<CityMapData> {
+    return {
+      nodes: [], edges: [], h3Cells: [], cameraObservations: [],
+      edgeStates: [], densities: [], demandPoints: [],
+    };
   }
 
   async parseScenarioCard(text: string): Promise<ScenarioObservation> {

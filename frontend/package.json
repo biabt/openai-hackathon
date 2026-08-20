@@ -19,6 +19,7 @@
     "@deck.gl/core": "9.3.10",
     "@deck.gl/geo-layers": "9.3.10",
     "@deck.gl/layers": "9.3.10",
+    "@deck.gl/mapbox": "9.3.10",
     "@deck.gl/react": "9.3.10",
     "ajv": "8.17.1",
     "h3-js": "4.1.0",

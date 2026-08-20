@@ -16,7 +16,7 @@ import { PlaybackControls } from "@/features/simulation/PlaybackControls";
 import { useSimulation } from "@/features/simulation/useSimulation";
 import { HttpCityOsTransport } from "@/lib/api/http-transport";
 import { MockCityOsTransport } from "@/lib/api/mock-transport";
-import type { CityOsTransport } from "@/lib/api/transport";
+import type { CityMapData, CityOsTransport } from "@/lib/api/transport";
 import type {
   BootstrapResponse,
   ScenarioObservation,
@@ -26,13 +26,14 @@ import type {
 function createTransport(): CityOsTransport {
   return process.env.NEXT_PUBLIC_CITY_OS_API_URL
     ? new HttpCityOsTransport()
-    : new MockCityOsTransport({ frameIntervalMs: 90 });
+    : new MockCityOsTransport({ frameIntervalMs: 90, defaultFleetSize: 35 });
 }
 
 export function Portal() {
   const transport = useMemo(createTransport, []);
   const [bootstrap, setBootstrap] = useState<BootstrapResponse | null>(null);
   const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [mapData, setMapData] = useState<CityMapData | null>(null);
   const [selectedScenarioId, setSelectedScenarioId] = useState("");
   const [observations, setObservations] = useState<ScenarioObservation[]>([]);
   const [pendingRequest, setPendingRequest] = useState<SimulationRequest | null>(null);
@@ -45,6 +46,13 @@ export function Portal() {
     void transport.bootstrap().then((value) => {
       if (!active) return;
       setBootstrap(value);
+      if (process.env.NEXT_PUBLIC_CITY_OS_API_URL) {
+        void transport.loadMapData(value.layer_urls as Record<string, string>)
+          .then((data) => { if (active) setMapData(data); })
+          .catch((error: unknown) => {
+            if (active) setBootstrapError(error instanceof Error ? error.message : "Falha ao carregar o mapa da API.");
+          });
+      }
       setObservations(value.scenarios);
       setSelectedScenarioId(value.scenarios[0]?.id ?? "");
       const initialScenario = value.scenarios[0];
@@ -117,6 +125,8 @@ export function Portal() {
       <FleetControl
         scenarioId={selectedScenarioId}
         initialFleetSize={request.fleet_size}
+        minimum={bootstrap.fleet_size_bounds.minimum}
+        maximum={bootstrap.fleet_size_bounds.maximum}
         seed={request.seed}
         disabled={simulation.state.job === "creating"}
         onRun={run}
@@ -164,7 +174,9 @@ export function Portal() {
           }}
         />
       )}
-      map={<CityMap viewModel={createCityMapViewModel(bootstrap, currentFrame)} />}
+      map={<CityMap viewModel={createCityMapViewModel(bootstrap, currentFrame, mapData, {
+        source: process.env.NEXT_PUBLIC_CITY_OS_API_URL ? "api" : "fixture",
+      })} />}
       comparison={(
         <ComparisonPanel
           baseline={simulation.terminalMetrics.baseline}

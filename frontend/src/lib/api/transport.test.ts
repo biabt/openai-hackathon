@@ -52,6 +52,58 @@ describe("transport parity", () => {
     await expect(http.getSimulation("sim-42")).resolves.toEqual(await mock.getSimulation("sim-42"));
   });
 
+  it("supports a larger deterministic fleet in the video mock", async () => {
+    const mock = new MockCityOsTransport({ defaultFleetSize: 35 });
+    await expect(mock.bootstrap()).resolves.toMatchObject({
+      fleet_size_bounds: { default: 35 },
+    });
+  });
+
+  it("loads every announced API map layer without fixture fallbacks", async () => {
+    const rows = {
+      "/nodes": [{ node_id: 1 }],
+      "/edges": [{ edge_id: 2 }],
+      "/cells": [{ cell: "88a8100c03fffff" }],
+      "/cameras": [{ camera_id: "cam-api" }],
+      "/flows": [{ edge_id: 2, flow_vph: 300 }],
+      "/density": [{ cell: "88a8100c03fffff", density_people_km2: 1200 }],
+      "/demand": [{ id: "demand-api", node_id: 1 }],
+    } as const;
+    const fetchStub = vi.fn(async (url: string | URL | Request) => {
+      const path = new URL(String(url)).pathname as keyof typeof rows;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ schema_version: "1.0", data: structuredClone(rows[path]) }),
+      } as Response;
+    }) as unknown as typeof fetch;
+    const http = new HttpCityOsTransport({ baseUrl: "http://127.0.0.1:8000", fetch: fetchStub });
+
+    await expect(http.loadMapData({
+      nodes: "/nodes",
+      edges: "/edges",
+      h3_cells: "/cells",
+      camera_observations: "/cameras",
+      edge_states: "/flows",
+      h3_density: "/density",
+      demand_points: "/demand",
+    })).resolves.toMatchObject({
+      nodes: rows["/nodes"],
+      edges: rows["/edges"],
+      h3Cells: rows["/cells"],
+      cameraObservations: rows["/cameras"],
+      edgeStates: rows["/flows"],
+      densities: rows["/density"],
+      demandPoints: rows["/demand"],
+    });
+    expect(fetchStub).toHaveBeenCalledTimes(7);
+
+    await expect(http.loadMapData({})).resolves.toEqual({
+      nodes: [], edges: [], h3Cells: [], cameraObservations: [],
+      edgeStates: [], densities: [], demandPoints: [],
+    });
+  });
+
   it("delivers identical validated domain frames from timers and WebSocket", async () => {
     const expected = assertContract("SimulationFrame", streamFixture[0]);
     const mock = new MockCityOsTransport({ frames: [expected], frameIntervalMs: 0 });

@@ -2,12 +2,17 @@ import type { StyleSpecification } from "maplibre-gl";
 import { Protocol } from "pmtiles";
 
 export const SAO_PAULO_VIEW = {
-  longitude: -46.6333,
-  latitude: -23.5505,
-  zoom: 10.2,
+  longitude: -46.5955,
+  latitude: -23.6825,
+  zoom: 9.15,
   minZoom: 8,
-  maxZoom: 18,
+  maxZoom: 14,
 } as const;
+
+export const SAO_PAULO_BOUNDS = [
+  [-46.826, -24.008],
+  [-46.365, -23.357],
+] as const;
 
 export const LOCAL_PMTILES_URL = "/map/sao-paulo.pmtiles";
 

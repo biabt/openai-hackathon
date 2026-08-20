@@ -10,6 +10,7 @@ import type {
 import {
   CityOsTransportError,
   type CityOsTransport,
+  type CityMapData,
   type FrameListener,
   type FrameSubscriptionOptions,
   type TransportErrorListener,
@@ -41,6 +42,28 @@ export class HttpCityOsTransport implements CityOsTransport {
 
   async bootstrap(): Promise<BootstrapResponse> {
     return assertContract("BootstrapResponse", await this.#request("/api/bootstrap"));
+  }
+
+  async loadMapData(layerUrls: Record<string, string>): Promise<CityMapData> {
+    const load = async <T>(key: string): Promise<T[]> => {
+      const url = layerUrls[key];
+      if (!url) return [];
+      const value = await this.#request(url);
+      if (!isLayerEnvelope(value)) {
+        throw new CityOsTransportError(`City OS layer ${key} returned an invalid envelope.`);
+      }
+      return value.data as T[];
+    };
+    const [nodes, edges, h3Cells, cameraObservations, edgeStates, densities, demandPoints] = await Promise.all([
+      load<CityMapData["nodes"][number]>("nodes"),
+      load<CityMapData["edges"][number]>("edges"),
+      load<CityMapData["h3Cells"][number]>("h3_cells"),
+      load<CityMapData["cameraObservations"][number]>("camera_observations"),
+      load<CityMapData["edgeStates"][number]>("edge_states"),
+      load<CityMapData["densities"][number]>("h3_density"),
+      load<CityMapData["demandPoints"][number]>("demand_points"),
+    ]);
+    return { nodes, edges, h3Cells, cameraObservations, edgeStates, densities, demandPoints };
   }
 
   async parseScenarioCard(text: string): Promise<ScenarioObservation> {
@@ -148,6 +171,12 @@ export class HttpCityOsTransport implements CityOsTransport {
     if (afterMinute >= 0) base.searchParams.set("after_minute", String(afterMinute));
     return base.toString();
   }
+}
+
+function isLayerEnvelope(value: unknown): value is { schema_version: "1.0"; data: unknown[] } {
+  return typeof value === "object" && value !== null
+    && (value as { schema_version?: unknown }).schema_version === "1.0"
+    && Array.isArray((value as { data?: unknown }).data);
 }
 
 async function decodeMessage(data: unknown): Promise<unknown> {

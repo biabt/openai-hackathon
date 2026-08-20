@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from city_os.contracts import (
     ApiError,
@@ -22,6 +26,7 @@ from city_os.contracts import (
 from city_os.scenarios import parse_scenario_card
 
 from .jobs import JobRegistry
+from .artifact_loader import load_world
 
 DEFAULT_CELL = "88a8100c05fffff"
 
@@ -96,7 +101,30 @@ def _parse_scenario(text: str) -> ScenarioParseResponse:
 
 def create_app() -> FastAPI:
     api = FastAPI(title="City OS Simulation API", version="1.0")
+    api.add_middleware(
+        CORSMiddleware,
+        allow_origins=[],
+        allow_origin_regex=r"http://(?:127\.0\.0\.1|localhost):\d+",
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+    )
+    repository = Path(__file__).resolve().parents[4]
+    spatial_manifest = repository / "data" / "demo" / "spatial" / "artifacts" / "manifest.json"
+    world = load_world(spatial_manifest)
     registry = JobRegistry()
+    xs = [float(node["x"]) for node in world.nodes]
+    ys = [float(node["y"]) for node in world.nodes]
+
+    def layer(name: str, data: tuple[dict[str, object], ...]) -> dict[str, object]:
+        return {
+            "schema_version": "1.0",
+            "provenance": {
+                "source_manifest": "data/demo/spatial/artifacts/manifest.json",
+                "simulated": False,
+                "layer": name,
+            },
+            "data": data,
+        }
 
     @api.get("/healthz")
     def health() -> dict[str, str]:
@@ -114,18 +142,36 @@ def create_app() -> FastAPI:
             forecast_horizon_minutes=60,
             default_seed=42,
             bounds=GeographicBounds(
-                min_longitude=-46.85,
-                min_latitude=-24.0,
-                max_longitude=-46.35,
-                max_latitude=-23.35,
+                min_longitude=min(xs), min_latitude=min(ys),
+                max_longitude=max(xs), max_latitude=max(ys),
             ),
             fleet_size_bounds=FleetSizeBounds(minimum=1, maximum=120, default=12),
             scenarios=built_in_scenarios(),
             layer_urls={
-                "roads": "/assets/map/sao-paulo.pmtiles",
-                "h3_density": "/api/layers/h3-density",
-                "edge_flow": "/api/layers/edge-flow",
+                "roads": "/map/sao-paulo.pmtiles",
+                "nodes": "/api/layers/nodes",
+                "edges": "/api/layers/edges",
+                "h3_cells": "/api/layers/h3-cells",
             },
+        )
+
+    @api.get("/api/layers/nodes")
+    def nodes() -> dict[str, object]:
+        return layer("nodes", world.nodes)
+
+    @api.get("/api/layers/edges")
+    def edges() -> dict[str, object]:
+        return layer("edges", world.edges)
+
+    @api.get("/api/layers/h3-cells")
+    def h3_cells() -> dict[str, object]:
+        return layer("h3_cells", world.h3_cells)
+
+    @api.get("/map/sao-paulo.pmtiles")
+    def map_tiles() -> FileResponse:
+        return FileResponse(
+            repository / "data" / "demo" / "map" / "sao-paulo.pmtiles",
+            media_type="application/vnd.pmtiles",
         )
 
     @api.post("/api/scenario-cards/parse", response_model=ScenarioParseResponse)
